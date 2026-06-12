@@ -1,0 +1,47 @@
+[package]
+name        = "helios-contracts"
+version     = "0.1.0"
+edition     = "2021"
+authors     = ["Helios Team"]
+license     = "Apache-2.0"
+description = "Helios: RWA data exchange on Casper — native casper-contract, zero odra-build dependency"
+
+# ── No [[bin]], no odra-build, no odra-schema ────────────────────────────────
+# Root cause audit (field-verified):
+#   • [[bin]] pulls in odra-build → odra-schema → requires odra-core ≥1.5.1
+#     which conflicts with a local 1.4.0 patch → Cargo refuses to resolve.
+#   • `cargo odra build` wraps `rm -rf wasm/*.wasm && cargo build --target wasm32`
+#     but zsh treats an empty-glob rm as a fatal error and the whole command
+#     never reaches cargo.
+#   Solution: native casper-contract; build with plain cargo build --release
+#   --target wasm32-unknown-unknown directly. No proprietary CLI required.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[lib]
+name    = "helios_contracts"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+casper-contract = { version = "4", default-features = false }
+casper-types    = { version = "4", default-features = false }
+
+[dev-dependencies]
+# unit tests run on host (no wasm), so we pull the std-enabled host variant
+casper-contract = { version = "4", features = ["std", "test-support"] }
+casper-types    = { version = "4", features = ["std"] }
+
+[features]
+default     = []
+oracle-registry = []
+data-market     = []
+fund-vault      = []
+governance      = []
+
+[profile.release]
+codegen-units = 1
+lto           = true
+opt-level     = "z"
+panic         = "abort"    # required for wasm; also avoids the no_mangle conflict
+
+[profile.dev]
+panic = "abort"

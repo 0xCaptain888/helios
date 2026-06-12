@@ -1,0 +1,424 @@
+{
+ "generated_at": 1781238812.2708752,
+ "mode": "mock",
+ "network": "helios-localsim",
+ "kpis": {
+  "payments": 6,
+  "volume_motes": 20000000000,
+  "oracles": 3,
+  "listings": 3,
+  "nav_micro": 1002820,
+  "vetoes": 0,
+  "attestations": 6
+ },
+ "oracles": [
+  {
+   "address": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "name": "Beacon Rates",
+   "category": "rates",
+   "feed_key": "us_tbill_3m",
+   "endpoint": "http://127.0.0.1:8451/quote",
+   "price_motes": 2000000000,
+   "score_bps": 1080,
+   "settlements": 2,
+   "attestations": 2,
+   "revenue_motes": 4000000000,
+   "last_value": 5.2662
+  },
+  {
+   "address": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "name": "Aurum Desk",
+   "category": "commodities",
+   "feed_key": "xau_usd",
+   "endpoint": "http://127.0.0.1:8452/quote",
+   "price_motes": 3000000000,
+   "score_bps": 1080,
+   "settlements": 2,
+   "attestations": 2,
+   "revenue_motes": 6000000000,
+   "last_value": 2364.0648
+  },
+  {
+   "address": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "name": "Brick&Block",
+   "category": "real-estate",
+   "feed_key": "re_index_us",
+   "endpoint": "http://127.0.0.1:8453/quote",
+   "price_motes": 5000000000,
+   "score_bps": 1080,
+   "settlements": 2,
+   "attestations": 2,
+   "revenue_motes": 10000000000,
+   "last_value": 188.9005
+  }
+ ],
+ "payments": [
+  {
+   "ts": 1781238810.562091,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "feed_key": "re_index_us",
+   "amount_motes": 5000000000,
+   "receipt": "c141eb531b272e8d698cc6a3abad1497fa19d21284f55878e99793b1b7dd9f1e",
+   "anchor_deploy": "f76bcb8366c4992acd73660a177c9ce36d240f0af370672984b70f3e5bcf60cc",
+   "explorer": "local://ledger/f76bcb8366c4992a",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781238810.5549831,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "feed_key": "xau_usd",
+   "amount_motes": 3000000000,
+   "receipt": "e9c771c957322bfe90d322160ee198de92c5c78c81d2082a21ec2a7f51b6780b",
+   "anchor_deploy": "0261795a087ead528406be3f073fc096583600defa5af784681f0ec28cfbcc83",
+   "explorer": "local://ledger/0261795a087ead52",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781238810.5475378,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "feed_key": "us_tbill_3m",
+   "amount_motes": 2000000000,
+   "receipt": "cd9bb32cd0bb1d63bc0afd7ed405be14586d766bb74cd7ef905d7e8798761902",
+   "anchor_deploy": "de178dcafd36006ddb9fa5b332ada283d767c52a9bc1c0a5ab53d41a51049960",
+   "explorer": "local://ledger/de178dcafd36006d",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781238808.826404,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "feed_key": "re_index_us",
+   "amount_motes": 5000000000,
+   "receipt": "947897629017e5f03e7d5742a81a14b8859e1bef4f425a82d5c7e786892d5b90",
+   "anchor_deploy": "af31ed56bc43d2b7ab2503a5a5ae8ab091c6c1a5b0abde0e424db440b5967539",
+   "explorer": "local://ledger/af31ed56bc43d2b7",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781238808.8197849,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "feed_key": "xau_usd",
+   "amount_motes": 3000000000,
+   "receipt": "393f082b09d76e89cd143ee22291dd08f9ff5af8530a3ed259dad5e318b03a94",
+   "anchor_deploy": "8249fce98c278c85c686b7ee92077d9ad8401e89c7270e8af2469d41a054f393",
+   "explorer": "local://ledger/8249fce98c278c85",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781238808.8126829,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "feed_key": "us_tbill_3m",
+   "amount_motes": 2000000000,
+   "receipt": "131af72ef7a24a9bd7b657a1787d3e43191f8aa27dd79b2a821a90ff5ca8ef00",
+   "anchor_deploy": "dea0772295c93c50634041f88023f128046f8c3f526891d15e3103407bc7f9d2",
+   "explorer": "local://ledger/dea0772295c93c50",
+   "kind": "x402"
+  }
+ ],
+ "attestations": [
+  {
+   "ts": 1781238810.5395977,
+   "oracle": "Brick&Block",
+   "feed_key": "re_index_us",
+   "value": "188.9005",
+   "deploy": "3b8253c5e1d038c5eb79cef9fd45720dd586729928c77a884ae8f44430cd3fca"
+  },
+  {
+   "ts": 1781238810.5369978,
+   "oracle": "Aurum Desk",
+   "feed_key": "xau_usd",
+   "value": "2364.0648",
+   "deploy": "bfa4c5d524fa52e3ef67c43df86db9cebc121592fbfc88ad56a4d8628f805779"
+  },
+  {
+   "ts": 1781238810.5345418,
+   "oracle": "Beacon Rates",
+   "feed_key": "us_tbill_3m",
+   "value": "5.2662",
+   "deploy": "87e76372c0cf8de12e2be65fc08f1a44f900b2bd4e3865fbb0ad00d91bfdc17e"
+  },
+  {
+   "ts": 1781238808.756852,
+   "oracle": "Brick&Block",
+   "feed_key": "re_index_us",
+   "value": "187.9825",
+   "deploy": "389841094938edd0da7535c0704d680201ce30a2d3700f1672cf133b58d6e988"
+  },
+  {
+   "ts": 1781238808.7553687,
+   "oracle": "Aurum Desk",
+   "feed_key": "xau_usd",
+   "value": "2355.8131",
+   "deploy": "5da5e87282788a2b6607f08a63b74dce04c3ddf468038626c462115dbd30afeb"
+  },
+  {
+   "ts": 1781238808.7538967,
+   "oracle": "Beacon Rates",
+   "feed_key": "us_tbill_3m",
+   "value": "5.236",
+   "deploy": "f7b0fce886c84cbec7f838bb50fe37a7c9dcf5b1c0e39371822fa05f79551bdd"
+  }
+ ],
+ "decisions": [
+  {
+   "round": 2,
+   "rationale": "3M T-Bill yields 5.286%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.51 vs 0.53), 15% CSPR kept liquid per policy.",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 1500
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 2862
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 2860
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 2778
+    }
+   ],
+   "proposal_id": 1,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "cd9bb32cd0bb1d63bc0afd7ed405be14586d766bb74cd7ef905d7e8798761902",
+    "e9c771c957322bfe90d322160ee198de92c5c78c81d2082a21ec2a7f51b6780b",
+    "c141eb531b272e8d698cc6a3abad1497fa19d21284f55878e99793b1b7dd9f1e"
+   ],
+   "status": "executed",
+   "veto_reason": "",
+   "ts": 1781238810.566621,
+   "exec_deploy": "89a411ee60a476d58cd33995f8328282879374850da1caea4945cfd26a629158"
+  },
+  {
+   "round": 1,
+   "rationale": "3M T-Bill yields 5.2662%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.50 vs 0.50), 15% CSPR kept liquid per policy.",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 1500
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 2783
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 2932
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 2785
+    }
+   ],
+   "proposal_id": 0,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "131af72ef7a24a9bd7b657a1787d3e43191f8aa27dd79b2a821a90ff5ca8ef00",
+    "393f082b09d76e89cd143ee22291dd08f9ff5af8530a3ed259dad5e318b03a94",
+    "947897629017e5f03e7d5742a81a14b8859e1bef4f425a82d5c7e786892d5b90"
+   ],
+   "status": "executed",
+   "veto_reason": "",
+   "ts": 1781238808.8303728,
+   "exec_deploy": "4112e7cb6e9986636fb5e981900dc73de9a3836941cb0c827391ae353bc2233a"
+  }
+ ],
+ "nav_history": [
+  {
+   "round": 0,
+   "nav_micro": 1000000,
+   "ts": 1781238808.4352546
+  },
+  {
+   "round": 1,
+   "nav_micro": 1001012,
+   "ts": 1781238810.5331695
+  },
+  {
+   "round": 2,
+   "nav_micro": 1002820,
+   "ts": 1781238812.2703652
+  }
+ ],
+ "governance": [
+  {
+   "ts": 1781238812.2683527,
+   "id": 1,
+   "summary": "Proposal #1 approved",
+   "status": "approved",
+   "reason": "",
+   "deploy": "f707c6270acc688fb9f92c03181f25821f507fdc0548fd96aaf068791eed9138",
+   "explorer": "local://ledger/f707c6270acc688f"
+  },
+  {
+   "ts": 1781238810.5660746,
+   "id": 1,
+   "summary": "Round 2: CSPR 15.0%, RE_INDEX_US 28.6%, US_TBILL_3M 28.6%, XAU 27.8%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "7ce67076d17d5f5a96385c8b74f5f1c831765940e2762436b630b5918084440f",
+   "explorer": "local://ledger/7ce67076d17d5f5a"
+  },
+  {
+   "ts": 1781238810.5318034,
+   "id": 0,
+   "summary": "Proposal #0 approved",
+   "status": "approved",
+   "reason": "",
+   "deploy": "2c6dc913f574da86c433f59bd458138fa080711975f6ba41eae08d29cb4168b4",
+   "explorer": "local://ledger/2c6dc913f574da86"
+  },
+  {
+   "ts": 1781238808.8299742,
+   "id": 0,
+   "summary": "Round 1: CSPR 15.0%, RE_INDEX_US 27.8%, US_TBILL_3M 29.3%, XAU 27.9%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "12cb03862fc05686bb0364d44be2a7a62c10d61cd9fe53f5d240de9936ab657b",
+   "explorer": "local://ledger/12cb03862fc05686"
+  }
+ ],
+ "deploys": [
+  {
+   "ts": 1781238812.2698805,
+   "hash": "89a411ee60a476d58cd33995f8328282879374850da1caea4945cfd26a629158",
+   "kind": "vault.execute_rebalance",
+   "explorer": "local://ledger/89a411ee60a476d5"
+  },
+  {
+   "ts": 1781238812.2677677,
+   "hash": "f707c6270acc688fb9f92c03181f25821f507fdc0548fd96aaf068791eed9138",
+   "kind": "gov.finalize",
+   "explorer": "local://ledger/f707c6270acc688f"
+  },
+  {
+   "ts": 1781238810.5653596,
+   "hash": "7ce67076d17d5f5a96385c8b74f5f1c831765940e2762436b630b5918084440f",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/7ce67076d17d5f5a"
+  },
+  {
+   "ts": 1781238810.562519,
+   "hash": "f76bcb8366c4992acd73660a177c9ce36d240f0af370672984b70f3e5bcf60cc",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/f76bcb8366c4992a"
+  },
+  {
+   "ts": 1781238810.555433,
+   "hash": "0261795a087ead528406be3f073fc096583600defa5af784681f0ec28cfbcc83",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/0261795a087ead52"
+  },
+  {
+   "ts": 1781238810.5481288,
+   "hash": "de178dcafd36006ddb9fa5b332ada283d767c52a9bc1c0a5ab53d41a51049960",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/de178dcafd36006d"
+  },
+  {
+   "ts": 1781238810.5399802,
+   "hash": "3b8253c5e1d038c5eb79cef9fd45720dd586729928c77a884ae8f44430cd3fca",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/3b8253c5e1d038c5"
+  },
+  {
+   "ts": 1781238810.5374267,
+   "hash": "bfa4c5d524fa52e3ef67c43df86db9cebc121592fbfc88ad56a4d8628f805779",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/bfa4c5d524fa52e3"
+  },
+  {
+   "ts": 1781238810.5349104,
+   "hash": "87e76372c0cf8de12e2be65fc08f1a44f900b2bd4e3865fbb0ad00d91bfdc17e",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/87e76372c0cf8de1"
+  },
+  {
+   "ts": 1781238810.5328453,
+   "hash": "4112e7cb6e9986636fb5e981900dc73de9a3836941cb0c827391ae353bc2233a",
+   "kind": "vault.execute_rebalance",
+   "explorer": "local://ledger/4112e7cb6e998663"
+  },
+  {
+   "ts": 1781238810.5313458,
+   "hash": "2c6dc913f574da86c433f59bd458138fa080711975f6ba41eae08d29cb4168b4",
+   "kind": "gov.finalize",
+   "explorer": "local://ledger/2c6dc913f574da86"
+  },
+  {
+   "ts": 1781238808.8293748,
+   "hash": "12cb03862fc05686bb0364d44be2a7a62c10d61cd9fe53f5d240de9936ab657b",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/12cb03862fc05686"
+  },
+  {
+   "ts": 1781238808.826724,
+   "hash": "af31ed56bc43d2b7ab2503a5a5ae8ab091c6c1a5b0abde0e424db440b5967539",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/af31ed56bc43d2b7"
+  },
+  {
+   "ts": 1781238808.820066,
+   "hash": "8249fce98c278c85c686b7ee92077d9ad8401e89c7270e8af2469d41a054f393",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/8249fce98c278c85"
+  },
+  {
+   "ts": 1781238808.8130414,
+   "hash": "dea0772295c93c50634041f88023f128046f8c3f526891d15e3103407bc7f9d2",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/dea0772295c93c50"
+  },
+  {
+   "ts": 1781238808.7570822,
+   "hash": "389841094938edd0da7535c0704d680201ce30a2d3700f1672cf133b58d6e988",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/389841094938edd0"
+  },
+  {
+   "ts": 1781238808.7556105,
+   "hash": "5da5e87282788a2b6607f08a63b74dce04c3ddf468038626c462115dbd30afeb",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/5da5e87282788a2b"
+  },
+  {
+   "ts": 1781238808.7542074,
+   "hash": "f7b0fce886c84cbec7f838bb50fe37a7c9dcf5b1c0e39371822fa05f79551bdd",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/f7b0fce886c84cbe"
+  },
+  {
+   "ts": 1781238808.4420052,
+   "hash": "835817fcaa4c0b927d370718abed986dad3de2c434bd611ba0d144c8fd519557",
+   "kind": "vault.deposit",
+   "explorer": "local://ledger/835817fcaa4c0b92"
+  },
+  {
+   "ts": 1781238808.439602,
+   "hash": "96a80778b4caabaf8a7807e755e1cab7121ab29b8ff4f08bab5b433a53884b36",
+   "kind": "registry.register",
+   "explorer": "local://ledger/96a80778b4caabaf"
+  },
+  {
+   "ts": 1781238808.4380844,
+   "hash": "3d339a6271d4188e66f01f25a3f4f6e0816e173ef337cec320dd11519cd254c6",
+   "kind": "registry.register",
+   "explorer": "local://ledger/3d339a6271d4188e"
+  },
+  {
+   "ts": 1781238808.4365904,
+   "hash": "cf956208b62e66c9eca1b4e5af87b3962fecbc533c8045c380c6ea5db096d786",
+   "kind": "registry.register",
+   "explorer": "local://ledger/cf956208b62e66c9"
+  }
+ ]
+}

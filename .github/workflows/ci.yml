@@ -1,0 +1,33 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install cargo-odra
+        run: cargo install cargo-odra --locked
+      - name: Unit tests (OdraVM)
+        working-directory: contracts
+        run: cargo odra test
+      - name: Format check
+        working-directory: contracts
+        run: cargo fmt --check
+
+  agents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Byte-compile all agent code
+        run: python -m compileall demo.py agents
+      - name: Smoke-run the machine economy (3 rounds)
+        run: python demo.py --rounds 3 --fast --no-serve

@@ -1,0 +1,22 @@
+# Rust build artefacts — wasm outputs checked in after build_contracts.sh
+contracts/target/
+contracts/wasm/
+contracts/.builder*/
+
+# Keys & secrets — NEVER commit
+*.pem
+keys/
+agents/testnet.env
+
+# NOTE: contracts/Cargo.lock IS committed (pins verified dep graph).
+# NOTE: contracts/vendor/ IS committed if apply_odra_patch.sh was used.
+
+# Python
+__pycache__/
+*.pyc
+agents/_state/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
