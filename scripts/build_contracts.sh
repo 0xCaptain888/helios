@@ -37,9 +37,9 @@ build_one() {
   local feature="$1"
   local outname="$2"
   echo "-- building $outname (feature: $feature)"
-  # Explicitly clear RUSTFLAGS for each build so the env can't pollute us.
-  # We set only what we need: nothing extra. panic=abort is in Cargo.toml.
-  RUSTFLAGS="" cargo build \
+  # Explicitly set RUSTFLAGS to allow undefined Casper host functions during linking.
+  # Casper VM provides these at runtime, so the linker must not fail on them.
+  RUSTFLAGS="-C link-arg=--allow-undefined" cargo build \
     --release \
     --manifest-path "$CONTRACTS/Cargo.toml" \
     --target wasm32-unknown-unknown \

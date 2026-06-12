@@ -15,7 +15,7 @@ use casper_contract::{
 };
 use casper_types::{
     CLType, EntryPoint, EntryPointAccess, EntryPointType, EntryPoints,
-    Parameter, URef, contracts::NamedKeys,
+    Parameter, RuntimeArgs, URef, contracts::NamedKeys,
 };
 
 // ── Pure arithmetic (shared with tests) ──────────────────────────────────────
@@ -119,12 +119,9 @@ pub extern "C" fn purchase() {
     // credit the oracle's reputation via cross-contract call
     let registry: String = read_str(get_uref("registry_hash"));
     if !registry.is_empty() {
-        let reg_key = casper_types::ContractHash::from_formatted_str(&registry)
-            .ok()
-            .map(|h| casper_types::Key::from(h));
-        if let Some(key) = reg_key {
+        if let Ok(contract_hash) = casper_types::ContractHash::from_formatted_str(&registry) {
             runtime::call_contract::<()>(
-                key.into_contract_hash().unwrap_or_revert(),
+                contract_hash,
                 "credit_settlement",
                 casper_types::runtime_args! { "oracle" => oracle },
             );
@@ -168,12 +165,9 @@ pub extern "C" fn anchor_x402_receipt() {
     // credit reputation
     let registry: String = read_str(get_uref("registry_hash"));
     if !registry.is_empty() {
-        let reg_key = casper_types::ContractHash::from_formatted_str(&registry)
-            .ok()
-            .map(|h| casper_types::Key::from(h));
-        if let Some(rk) = reg_key {
+        if let Ok(contract_hash) = casper_types::ContractHash::from_formatted_str(&registry) {
             runtime::call_contract::<()>(
-                rk.into_contract_hash().unwrap_or_revert(),
+                contract_hash,
                 "credit_settlement",
                 casper_types::runtime_args! { "oracle" => oracle },
             );

@@ -19,7 +19,6 @@ use casper_contract::contract_api::storage;
 use casper_types::{URef, CLValue, CLTyped};
 
 pub fn put<T: CLTyped + casper_types::bytesrepr::ToBytes>(name: &str, value: T) {
-    storage::new_uref(value);
     // store by name in the calling contract's named keys
     let uref: URef = storage::new_uref(value);
     casper_contract::contract_api::runtime::put_key(name, uref.into());

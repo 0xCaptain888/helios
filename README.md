@@ -60,24 +60,30 @@ Full details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 | Path | What |
 |---|---|
-| `contracts/` | Four Odra (Rust) smart contracts + unit tests |
+| `contracts/` | Four native Casper smart contracts (Rust, zero Odra dependency) + unit tests |
 | `agents/` | Oracle / fund / risk agents + x402 facilitator (pure Python stdlib) |
 | `frontend/` | Zero-build dashboard (vanilla HTML/CSS/JS) |
-| `scripts/` | Testnet deployment + round driver |
+| `scripts/` | Testnet deployment + 3-layer wasm pre-deploy gate |
 | `docs/` | Architecture & Casper Testnet runbook |
 | `demo.py` | One-command local machine economy |
 
 ## Smart contracts
 
+Built natively with `cargo`, requiring **zero Odra toolchain dependencies**.
+
 ```bash
 cd contracts
-cargo install cargo-odra --locked   # once
-cargo odra test                     # 12 unit tests, OdraVM
-cargo odra test -b casper           # against the Casper backend VM
-cargo odra build                    # produces WASM in wasm/
+cargo test                          # 12 unit tests (host build)
+
+# Build all 4 contracts to WASM (with feature flags)
+bash ../scripts/build_contracts.sh
+
+# Pre-deploy 3-layer gate: verifies `call` export, internal memory section, 
+# and all Phase 2 entry-point handlers exist in the WASM export table.
+python3 ../scripts/check_wasm_exports.py wasm/*.wasm
 ```
 
-Deployment to Casper Testnet: [`docs/TESTNET.md`](docs/TESTNET.md) and `scripts/deploy_contracts.sh`.
+Deployment to Casper Testnet: [`docs/TESTNET.md`](docs/TESTNET.md) and `scripts/casper_deploy.py` (pure Python, zero `casper-client` required).
 
 ## Modes
 
