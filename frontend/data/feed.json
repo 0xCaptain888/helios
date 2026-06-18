@@ -1,15 +1,15 @@
 {
- "generated_at": 1781238812.2708752,
+ "generated_at": 1781240724.64291,
  "mode": "mock",
  "network": "helios-localsim",
  "kpis": {
-  "payments": 6,
-  "volume_motes": 20000000000,
+  "payments": 18,
+  "volume_motes": 60000000000,
   "oracles": 3,
   "listings": 3,
-  "nav_micro": 1002820,
-  "vetoes": 0,
-  "attestations": 6
+  "nav_micro": 1007351,
+  "vetoes": 1,
+  "attestations": 18
  },
  "oracles": [
   {
@@ -19,11 +19,11 @@
    "feed_key": "us_tbill_3m",
    "endpoint": "http://127.0.0.1:8451/quote",
    "price_motes": 2000000000,
-   "score_bps": 1080,
-   "settlements": 2,
-   "attestations": 2,
-   "revenue_motes": 4000000000,
-   "last_value": 5.2662
+   "score_bps": 1240,
+   "settlements": 6,
+   "attestations": 6,
+   "revenue_motes": 12000000000,
+   "last_value": 5.2982
   },
   {
    "address": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
@@ -32,11 +32,11 @@
    "feed_key": "xau_usd",
    "endpoint": "http://127.0.0.1:8452/quote",
    "price_motes": 3000000000,
-   "score_bps": 1080,
-   "settlements": 2,
-   "attestations": 2,
-   "revenue_motes": 6000000000,
-   "last_value": 2364.0648
+   "score_bps": 1240,
+   "settlements": 6,
+   "attestations": 6,
+   "revenue_motes": 18000000000,
+   "last_value": 2378.1998
   },
   {
    "address": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
@@ -45,126 +45,506 @@
    "feed_key": "re_index_us",
    "endpoint": "http://127.0.0.1:8453/quote",
    "price_motes": 5000000000,
-   "score_bps": 1080,
-   "settlements": 2,
-   "attestations": 2,
-   "revenue_motes": 10000000000,
-   "last_value": 188.9005
+   "score_bps": 1240,
+   "settlements": 6,
+   "attestations": 6,
+   "revenue_motes": 30000000000,
+   "last_value": 190.8836
   }
  ],
  "payments": [
   {
-   "ts": 1781238810.562091,
+   "ts": 1781240722.9338288,
    "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
    "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
    "feed_key": "re_index_us",
    "amount_motes": 5000000000,
-   "receipt": "c141eb531b272e8d698cc6a3abad1497fa19d21284f55878e99793b1b7dd9f1e",
-   "anchor_deploy": "f76bcb8366c4992acd73660a177c9ce36d240f0af370672984b70f3e5bcf60cc",
-   "explorer": "local://ledger/f76bcb8366c4992a",
+   "receipt": "95685b45524de9538c1890a215ba7946dcafc2fab43736e5a5a5acff6e5a251f",
+   "anchor_deploy": "f7ed6e88e067bff575cf840db7c7f639de8e5e963f22432155de4b11658c72b0",
+   "explorer": "local://ledger/f7ed6e88e067bff5",
    "kind": "x402"
   },
   {
-   "ts": 1781238810.5549831,
+   "ts": 1781240722.9273233,
    "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
    "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
    "feed_key": "xau_usd",
    "amount_motes": 3000000000,
-   "receipt": "e9c771c957322bfe90d322160ee198de92c5c78c81d2082a21ec2a7f51b6780b",
-   "anchor_deploy": "0261795a087ead528406be3f073fc096583600defa5af784681f0ec28cfbcc83",
-   "explorer": "local://ledger/0261795a087ead52",
+   "receipt": "b9ad8ded2ce8c39b8538e24477f84e80e12d3e8c13209b993c2bc7f234278504",
+   "anchor_deploy": "1e820200ec98ccd99a53d79cb9e263aae073e9a694eec11adb4b0d10e7df3dde",
+   "explorer": "local://ledger/1e820200ec98ccd9",
    "kind": "x402"
   },
   {
-   "ts": 1781238810.5475378,
+   "ts": 1781240722.9208262,
    "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
    "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
    "feed_key": "us_tbill_3m",
    "amount_motes": 2000000000,
-   "receipt": "cd9bb32cd0bb1d63bc0afd7ed405be14586d766bb74cd7ef905d7e8798761902",
-   "anchor_deploy": "de178dcafd36006ddb9fa5b332ada283d767c52a9bc1c0a5ab53d41a51049960",
-   "explorer": "local://ledger/de178dcafd36006d",
+   "receipt": "77ef4e4e160c357eabaad0315e3544c0c1220a5a1062071b8a73bbaaf4ee7aef",
+   "anchor_deploy": "e06af49799c42d793b835e8c281c306eeb99f49ee5dda6965f10fc5ddded844f",
+   "explorer": "local://ledger/e06af49799c42d79",
    "kind": "x402"
   },
   {
-   "ts": 1781238808.826404,
+   "ts": 1781240720.1993902,
    "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
    "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
    "feed_key": "re_index_us",
    "amount_motes": 5000000000,
-   "receipt": "947897629017e5f03e7d5742a81a14b8859e1bef4f425a82d5c7e786892d5b90",
-   "anchor_deploy": "af31ed56bc43d2b7ab2503a5a5ae8ab091c6c1a5b0abde0e424db440b5967539",
-   "explorer": "local://ledger/af31ed56bc43d2b7",
+   "receipt": "bd7d47b4f494998776a7a363a07ab899472c2fe6ed159b61ce89b1742f85bae8",
+   "anchor_deploy": "4563c62be3a5bae44a14ceda0e8567c6ac93a6dba057ba9eac2c61affdc09b48",
+   "explorer": "local://ledger/4563c62be3a5bae4",
    "kind": "x402"
   },
   {
-   "ts": 1781238808.8197849,
+   "ts": 1781240720.193238,
    "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
    "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
    "feed_key": "xau_usd",
    "amount_motes": 3000000000,
-   "receipt": "393f082b09d76e89cd143ee22291dd08f9ff5af8530a3ed259dad5e318b03a94",
-   "anchor_deploy": "8249fce98c278c85c686b7ee92077d9ad8401e89c7270e8af2469d41a054f393",
-   "explorer": "local://ledger/8249fce98c278c85",
+   "receipt": "77b7d84de616639059ee20d7a174d6df652ab3f6ff2592a204a5e1dddcfd6b41",
+   "anchor_deploy": "db6d1c384669273bb822fb65dd9f2e07f1c21daf0b784c59272491efe9f6ecab",
+   "explorer": "local://ledger/db6d1c384669273b",
    "kind": "x402"
   },
   {
-   "ts": 1781238808.8126829,
+   "ts": 1781240720.1873145,
    "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
    "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
    "feed_key": "us_tbill_3m",
    "amount_motes": 2000000000,
-   "receipt": "131af72ef7a24a9bd7b657a1787d3e43191f8aa27dd79b2a821a90ff5ca8ef00",
-   "anchor_deploy": "dea0772295c93c50634041f88023f128046f8c3f526891d15e3103407bc7f9d2",
-   "explorer": "local://ledger/dea0772295c93c50",
+   "receipt": "653f4769c9231bdd4c18b1ea9aad22ee53359f1b8bd8f287d81548bc29ba50f0",
+   "anchor_deploy": "1de4b736963f2c7c60e7adfc2bc675cd33196c7cadf38834208fc65710dcfac9",
+   "explorer": "local://ledger/1de4b736963f2c7c",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240717.4681888,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "feed_key": "re_index_us",
+   "amount_motes": 5000000000,
+   "receipt": "92d73ff973b6373cee892e5387c58bdb25159f4ad6a190e9b50daec904268b9d",
+   "anchor_deploy": "43063dd3501a4c7c2f500cd92543c82efca69aa7338fe748a8cf1807829f3297",
+   "explorer": "local://ledger/43063dd3501a4c7c",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240717.462933,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "feed_key": "xau_usd",
+   "amount_motes": 3000000000,
+   "receipt": "584a72fa7ed50bbdabda7b99d1f02e07a3858c9d449f3e18cec387eb703980ec",
+   "anchor_deploy": "c06fb366c72b48a9090527297bd3d7974af5e2c399f6e320307c08951670dc78",
+   "explorer": "local://ledger/c06fb366c72b48a9",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240717.4572465,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "feed_key": "us_tbill_3m",
+   "amount_motes": 2000000000,
+   "receipt": "88442f6e53be04206df075da68a4ad50b2e50c055feda30bc8e0604145949f93",
+   "anchor_deploy": "75020020213b10a939399b16701c957aa461394fc3cea1f6b44eb087658c9c8a",
+   "explorer": "local://ledger/75020020213b10a9",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240714.7382495,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "feed_key": "re_index_us",
+   "amount_motes": 5000000000,
+   "receipt": "14a185626fa321a444d1c57b7c8f271a4ce44f6fd702cb79e3702aa8498499c5",
+   "anchor_deploy": "e325317153752ec04cc0b23f9e74ff17b307db38ff0522a4daf140570658a3fa",
+   "explorer": "local://ledger/e325317153752ec0",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240714.7333171,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "feed_key": "xau_usd",
+   "amount_motes": 3000000000,
+   "receipt": "ee2a4b909a0cbff1f7a644b459991f5bcaab787a2278ec7a2f991b4cb3da3e70",
+   "anchor_deploy": "edd4959747a964a1e77f91b88a773107b1e3a3e14de99310461e1391eca879c5",
+   "explorer": "local://ledger/edd4959747a964a1",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240714.728226,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "feed_key": "us_tbill_3m",
+   "amount_motes": 2000000000,
+   "receipt": "ac1def4fe1f0f2f100ab7a6214ec57f3b36258bd3659dda84785f4c4d8b004cc",
+   "anchor_deploy": "0e1f1f5a2febc166cfd238a98fc1f5ef49f96a5f6f07380c81aaab2e997d0ae3",
+   "explorer": "local://ledger/0e1f1f5a2febc166",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240712.0150845,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "feed_key": "re_index_us",
+   "amount_motes": 5000000000,
+   "receipt": "adf339240fb158375a2688e61b22266298cd14bd806b941fdc70a94b86f8c96d",
+   "anchor_deploy": "db94ce62f51da07e5bf1cffbcf1bbfda5740abf17d68a4bc6b3d29e41bf1c056",
+   "explorer": "local://ledger/db94ce62f51da07e",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240712.0106215,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "feed_key": "xau_usd",
+   "amount_motes": 3000000000,
+   "receipt": "54045e0ee1665f411183cab1590c4742b301bea64b310edde16d578dacd2b447",
+   "anchor_deploy": "bc06b28df3313e51eaa725e73a90e53093979a5880f9070536d7d0bdbc7c9881",
+   "explorer": "local://ledger/bc06b28df3313e51",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240712.0059998,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "feed_key": "us_tbill_3m",
+   "amount_motes": 2000000000,
+   "receipt": "3c57c13f7badfb7ff868320967017d54849fd7ca2a5f859beb46b480efa69de5",
+   "anchor_deploy": "7c3f7565e527ec26d6dfd77c9eba2d84b817cf40d8d874854accd74750717e57",
+   "explorer": "local://ledger/7c3f7565e527ec26",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240709.2951171,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-9435a61e323a1483ae77c32ef36c0bbc6ef338f6a21909df66e1238c",
+   "feed_key": "re_index_us",
+   "amount_motes": 5000000000,
+   "receipt": "ab4f238dbce02625c3083fc83d4b6de18cd2efe11b3df00e3980a8e374bcf537",
+   "anchor_deploy": "ed353cf27269636faac73c7a1b29ce7e2ecffc36bc63504945d5debdf8838e36",
+   "explorer": "local://ledger/ed353cf27269636f",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240709.2908192,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-92fb4892ab55c1a9632825e0b916b52d66a59c2e3d43eaa9271293be",
+   "feed_key": "xau_usd",
+   "amount_motes": 3000000000,
+   "receipt": "95118e323e4d28947e85f4f4ecf923630669fc21c451574f8ee9d50be433e303",
+   "anchor_deploy": "9778c38191b58e22f819aa47a17337a84692b28a3495bb93e50b530c634e566c",
+   "explorer": "local://ledger/9778c38191b58e22",
+   "kind": "x402"
+  },
+  {
+   "ts": 1781240709.2866259,
+   "from": "account-hash-090c1c561cdda08c5871058ec2aa9b13d0e9af38b306a8be9d43f55b",
+   "to": "account-hash-860deae7770754aa58d3398ef0e7579d24155d4ff77519005f7f0e82",
+   "feed_key": "us_tbill_3m",
+   "amount_motes": 2000000000,
+   "receipt": "5958b1cab5d9109f0401d390115f26fbdadd1616d2385a78eee1ebd5d629cd03",
+   "anchor_deploy": "241ecb898b412d87ecbb45a3af29cc3ff91e83827392ca571cc62288640acbfd",
+   "explorer": "local://ledger/241ecb898b412d87",
    "kind": "x402"
   }
  ],
  "attestations": [
   {
-   "ts": 1781238810.5395977,
+   "ts": 1781240722.913851,
+   "oracle": "Brick&Block",
+   "feed_key": "re_index_us",
+   "value": "190.8836",
+   "deploy": "83f55c019e4ea48723e390b838b87881d1537e99c1f8795d450b95e66d96ebff"
+  },
+  {
+   "ts": 1781240722.9112656,
+   "oracle": "Aurum Desk",
+   "feed_key": "xau_usd",
+   "value": "2378.1998",
+   "deploy": "044dc27ad76c45570514ba3503a2a27132e42fd5a0bdbe77a770cc8f35af4517"
+  },
+  {
+   "ts": 1781240722.9085279,
+   "oracle": "Beacon Rates",
+   "feed_key": "us_tbill_3m",
+   "value": "5.2982",
+   "deploy": "97cd355707de662b0e58ae8decebd463dcf59c3032f256a55aa4985b6d4acf26"
+  },
+  {
+   "ts": 1781240720.181193,
+   "oracle": "Brick&Block",
+   "feed_key": "re_index_us",
+   "value": "190.5817",
+   "deploy": "690f48cd1f80acc8023be6d0fe372f1c7583629d12b13a199d0a11feaa722181"
+  },
+  {
+   "ts": 1781240720.1787016,
+   "oracle": "Aurum Desk",
+   "feed_key": "xau_usd",
+   "value": "2374.7401",
+   "deploy": "d93bb86356dd620bf96c3cc22fdcb534c511802b8dfda721c5e2de4a7962cca4"
+  },
+  {
+   "ts": 1781240720.1762452,
+   "oracle": "Beacon Rates",
+   "feed_key": "us_tbill_3m",
+   "value": "5.3093",
+   "deploy": "c04f470e4d1fd3f792975b6d9d35c78374a8b25ab2f51ca164cb9323653137b8"
+  },
+  {
+   "ts": 1781240717.451794,
+   "oracle": "Brick&Block",
+   "feed_key": "re_index_us",
+   "value": "190.2582",
+   "deploy": "81dd67a6836601bffb9fc97882a739e42d5a8bed911148b1574030cf44cf3453"
+  },
+  {
+   "ts": 1781240717.4500127,
+   "oracle": "Aurum Desk",
+   "feed_key": "xau_usd",
+   "value": "2373.6215",
+   "deploy": "2b3cfbe612d54fb390aeca73ea39cb6e9269264caab3dac88fd43d51cf5a269b"
+  },
+  {
+   "ts": 1781240717.4481952,
+   "oracle": "Beacon Rates",
+   "feed_key": "us_tbill_3m",
+   "value": "5.3055",
+   "deploy": "22bbf8f7a10dfb96d9a498dccd22bde2344a06f78e11112f086c6c2e50d04c93"
+  },
+  {
+   "ts": 1781240714.7232864,
+   "oracle": "Brick&Block",
+   "feed_key": "re_index_us",
+   "value": "189.5834",
+   "deploy": "6dd34aff5ba48eef8b6ec18da74ab3aa0bf21c0b93bd05204fd25513a4abd5f6"
+  },
+  {
+   "ts": 1781240714.721938,
+   "oracle": "Aurum Desk",
+   "feed_key": "xau_usd",
+   "value": "2367.9782",
+   "deploy": "52849d0799df731cf8a26e5034f3b4ed365b04650f1d4880537f95343e372eaf"
+  },
+  {
+   "ts": 1781240714.720474,
+   "oracle": "Beacon Rates",
+   "feed_key": "us_tbill_3m",
+   "value": "5.286",
+   "deploy": "115be10fbd35f84ae31206c7baa3a1743731de679ef0bae38a29c46bf325eb85"
+  },
+  {
+   "ts": 1781240712.001355,
    "oracle": "Brick&Block",
    "feed_key": "re_index_us",
    "value": "188.9005",
-   "deploy": "3b8253c5e1d038c5eb79cef9fd45720dd586729928c77a884ae8f44430cd3fca"
+   "deploy": "e3bc5bc84f6ea89e25e441712688cbffc229de99d56be9b5e8721eb583c013b7"
   },
   {
-   "ts": 1781238810.5369978,
+   "ts": 1781240712.000385,
    "oracle": "Aurum Desk",
    "feed_key": "xau_usd",
    "value": "2364.0648",
-   "deploy": "bfa4c5d524fa52e3ef67c43df86db9cebc121592fbfc88ad56a4d8628f805779"
+   "deploy": "97e6f17f5dc83fe65ec4fc33de615789817f55271fe838f6b82756b6b08312af"
   },
   {
-   "ts": 1781238810.5345418,
+   "ts": 1781240711.9993443,
    "oracle": "Beacon Rates",
    "feed_key": "us_tbill_3m",
    "value": "5.2662",
-   "deploy": "87e76372c0cf8de12e2be65fc08f1a44f900b2bd4e3865fbb0ad00d91bfdc17e"
+   "deploy": "eeb6f183b66c92fb5275c089e9d6851fa11cc5cb6d874dbe2a732956e999c0b8"
   },
   {
-   "ts": 1781238808.756852,
+   "ts": 1781240709.270793,
    "oracle": "Brick&Block",
    "feed_key": "re_index_us",
    "value": "187.9825",
-   "deploy": "389841094938edd0da7535c0704d680201ce30a2d3700f1672cf133b58d6e988"
+   "deploy": "a2224cc2fdb7e1d0080872d776518058d904b11d98648e2a2aa28f8c984fae11"
   },
   {
-   "ts": 1781238808.7553687,
+   "ts": 1781240709.2700074,
    "oracle": "Aurum Desk",
    "feed_key": "xau_usd",
    "value": "2355.8131",
-   "deploy": "5da5e87282788a2b6607f08a63b74dce04c3ddf468038626c462115dbd30afeb"
+   "deploy": "92492fbc35417b3c98f2e0e067c2409fa74666f93edb2a3b78973478725e9ed4"
   },
   {
-   "ts": 1781238808.7538967,
+   "ts": 1781240709.2692597,
    "oracle": "Beacon Rates",
    "feed_key": "us_tbill_3m",
    "value": "5.236",
-   "deploy": "f7b0fce886c84cbec7f838bb50fe37a7c9dcf5b1c0e39371822fa05f79551bdd"
+   "deploy": "834ac717905f36822e114ee783076dd83f6b4de6a79aa5fd0016247c03f25bfb"
   }
  ],
  "decisions": [
+  {
+   "round": 6,
+   "rationale": "3M T-Bill yields 5.2902%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.49 vs 0.49), 15% CSPR kept liquid per policy.",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 1500
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 2753
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 2976
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 2771
+    }
+   ],
+   "proposal_id": 6,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "77ef4e4e160c357eabaad0315e3544c0c1220a5a1062071b8a73bbaaf4ee7aef",
+    "b9ad8ded2ce8c39b8538e24477f84e80e12d3e8c13209b993c2bc7f234278504",
+    "95685b45524de9538c1890a215ba7946dcafc2fab43736e5a5a5acff6e5a251f"
+   ],
+   "status": "executed",
+   "veto_reason": "",
+   "ts": 1781240722.9384308,
+   "exec_deploy": "ac2242e4ccd58f63826f8f2bffebcdf21cd4036ae0f259a855f4fdc750bb0fa6"
+  },
+  {
+   "round": 5,
+   "rationale": "3M T-Bill yields 5.2982%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.51 vs 0.51), 15% CSPR kept liquid per policy.",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 1500
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 2803
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 2897
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 2800
+    }
+   ],
+   "proposal_id": 5,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "653f4769c9231bdd4c18b1ea9aad22ee53359f1b8bd8f287d81548bc29ba50f0",
+    "77b7d84de616639059ee20d7a174d6df652ab3f6ff2592a204a5e1dddcfd6b41",
+    "bd7d47b4f494998776a7a363a07ab899472c2fe6ed159b61ce89b1742f85bae8"
+   ],
+   "status": "executed",
+   "veto_reason": "",
+   "ts": 1781240720.2030034,
+   "exec_deploy": "7cc21718100d5840ae42b72ae1b5ee7463a6d0eb6280caa45722626d524de20d"
+  },
+  {
+   "round": 4,
+   "rationale": "3M T-Bill yields 5.3093%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.50 vs 0.51), 15% CSPR kept liquid per policy.",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 1500
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 2819
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 2914
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 2767
+    }
+   ],
+   "proposal_id": 4,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "88442f6e53be04206df075da68a4ad50b2e50c055feda30bc8e0604145949f93",
+    "584a72fa7ed50bbdabda7b99d1f02e07a3858c9d449f3e18cec387eb703980ec",
+    "92d73ff973b6373cee892e5387c58bdb25159f4ad6a190e9b50daec904268b9d"
+   ],
+   "status": "executed",
+   "veto_reason": "",
+   "ts": 1781240717.4713824,
+   "exec_deploy": "111792a773e9b0f4cbdf6385c0d359c725e629c6ade6c7895c2cb318fdf3b0de"
+  },
+  {
+   "round": 3,
+   "rationale": "3M T-Bill yields 5.3055%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.50 vs 0.50), 15% CSPR kept liquid per policy. (repaired after veto)",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 1500
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 2776
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 2946
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 2778
+    }
+   ],
+   "proposal_id": 3,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "ac1def4fe1f0f2f100ab7a6214ec57f3b36258bd3659dda84785f4c4d8b004cc",
+    "ee2a4b909a0cbff1f7a644b459991f5bcaab787a2278ec7a2f991b4cb3da3e70",
+    "14a185626fa321a444d1c57b7c8f271a4ce44f6fd702cb79e3702aa8498499c5"
+   ],
+   "status": "executed",
+   "veto_reason": "",
+   "ts": 1781240714.7436001,
+   "exec_deploy": "f5e93f9f0d0201efe28120b3440c550f3bc6aa77569c758aaa8422554090c4c6"
+  },
+  {
+   "round": 3,
+   "rationale": "Momentum on US_TBILL_3M is the strongest signal this round; concentrating 70% to capture it (aggressive mode).",
+   "positions": [
+    {
+     "asset": "CSPR",
+     "weight_bps": 500
+    },
+    {
+     "asset": "US_TBILL_3M",
+     "weight_bps": 7000
+    },
+    {
+     "asset": "XAU",
+     "weight_bps": 1250
+    },
+    {
+     "asset": "RE_INDEX_US",
+     "weight_bps": 1250
+    }
+   ],
+   "proposal_id": 2,
+   "spent_motes": 10000000000,
+   "receipts": [
+    "ac1def4fe1f0f2f100ab7a6214ec57f3b36258bd3659dda84785f4c4d8b004cc",
+    "ee2a4b909a0cbff1f7a644b459991f5bcaab787a2278ec7a2f991b4cb3da3e70",
+    "14a185626fa321a444d1c57b7c8f271a4ce44f6fd702cb79e3702aa8498499c5"
+   ],
+   "status": "vetoed",
+   "veto_reason": "US_TBILL_3M at 70.0% breaches the 45% single-RWA cap; CSPR reserve 5.0% is below the 10% liquidity floor",
+   "ts": 1781240714.7420714
+  },
   {
    "round": 2,
    "rationale": "3M T-Bill yields 5.286%, anchoring the rates sleeve; gold and real-estate sleeves sized by momentum (0.51 vs 0.53), 15% CSPR kept liquid per policy.",
@@ -189,14 +569,14 @@
    "proposal_id": 1,
    "spent_motes": 10000000000,
    "receipts": [
-    "cd9bb32cd0bb1d63bc0afd7ed405be14586d766bb74cd7ef905d7e8798761902",
-    "e9c771c957322bfe90d322160ee198de92c5c78c81d2082a21ec2a7f51b6780b",
-    "c141eb531b272e8d698cc6a3abad1497fa19d21284f55878e99793b1b7dd9f1e"
+    "3c57c13f7badfb7ff868320967017d54849fd7ca2a5f859beb46b480efa69de5",
+    "54045e0ee1665f411183cab1590c4742b301bea64b310edde16d578dacd2b447",
+    "adf339240fb158375a2688e61b22266298cd14bd806b941fdc70a94b86f8c96d"
    ],
    "status": "executed",
    "veto_reason": "",
-   "ts": 1781238810.566621,
-   "exec_deploy": "89a411ee60a476d58cd33995f8328282879374850da1caea4945cfd26a629158"
+   "ts": 1781240712.017246,
+   "exec_deploy": "d2e9b4cd9c34b58c58d58e0b1521c40b7fc0f060ed5108698e78cd468169b0d5"
   },
   {
    "round": 1,
@@ -222,203 +602,541 @@
    "proposal_id": 0,
    "spent_motes": 10000000000,
    "receipts": [
-    "131af72ef7a24a9bd7b657a1787d3e43191f8aa27dd79b2a821a90ff5ca8ef00",
-    "393f082b09d76e89cd143ee22291dd08f9ff5af8530a3ed259dad5e318b03a94",
-    "947897629017e5f03e7d5742a81a14b8859e1bef4f425a82d5c7e786892d5b90"
+    "5958b1cab5d9109f0401d390115f26fbdadd1616d2385a78eee1ebd5d629cd03",
+    "95118e323e4d28947e85f4f4ecf923630669fc21c451574f8ee9d50be433e303",
+    "ab4f238dbce02625c3083fc83d4b6de18cd2efe11b3df00e3980a8e374bcf537"
    ],
    "status": "executed",
    "veto_reason": "",
-   "ts": 1781238808.8303728,
-   "exec_deploy": "4112e7cb6e9986636fb5e981900dc73de9a3836941cb0c827391ae353bc2233a"
+   "ts": 1781240709.2968516,
+   "exec_deploy": "da5fdabc024ef14305527e33ce3403ec4a1599a8144803aa832cd3f0f949a643"
   }
  ],
  "nav_history": [
   {
    "round": 0,
    "nav_micro": 1000000,
-   "ts": 1781238808.4352546
+   "ts": 1781240708.9620302
   },
   {
    "round": 1,
    "nav_micro": 1001012,
-   "ts": 1781238810.5331695
+   "ts": 1781240710.9983208
   },
   {
    "round": 2,
    "nav_micro": 1002820,
-   "ts": 1781238812.2703652
+   "ts": 1781240713.7191408
+  },
+  {
+   "round": 3,
+   "nav_micro": 1003843,
+   "ts": 1781240716.4459958
+  },
+  {
+   "round": 4,
+   "nav_micro": 1005194,
+   "ts": 1781240719.1743662
+  },
+  {
+   "round": 5,
+   "nav_micro": 1006676,
+   "ts": 1781240721.9063828
+  },
+  {
+   "round": 6,
+   "nav_micro": 1007351,
+   "ts": 1781240724.6423163
   }
  ],
  "governance": [
   {
-   "ts": 1781238812.2683527,
+   "ts": 1781240724.640334,
+   "id": 6,
+   "summary": "Proposal #6 approved",
+   "status": "approved",
+   "reason": "",
+   "deploy": "81b66c5fd58fe03bb9b6668c8c422a6b4783d7a6779c0d047a2de3e82a276888",
+   "explorer": "local://ledger/81b66c5fd58fe03b"
+  },
+  {
+   "ts": 1781240722.9378078,
+   "id": 6,
+   "summary": "Round 6: CSPR 15.0%, RE_INDEX_US 27.5%, US_TBILL_3M 29.8%, XAU 27.7%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "6fecae05f2fb151777fcecf875edd589c889fb8d948b72fd351b2e93b48a08ef",
+   "explorer": "local://ledger/6fecae05f2fb1517"
+  },
+  {
+   "ts": 1781240721.9046993,
+   "id": 5,
+   "summary": "Proposal #5 approved",
+   "status": "approved",
+   "reason": "",
+   "deploy": "a5dba37feebb0cea1e6d539fbcb291252294c81ddfd088fd5c82c08c47a6f01b",
+   "explorer": "local://ledger/a5dba37feebb0cea"
+  },
+  {
+   "ts": 1781240720.2025213,
+   "id": 5,
+   "summary": "Round 5: CSPR 15.0%, RE_INDEX_US 28.0%, US_TBILL_3M 29.0%, XAU 28.0%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "2db2456ec52aa9ac35108575ee6a2dfd8b986da4c9be1bec145298a2569c2198",
+   "explorer": "local://ledger/2db2456ec52aa9ac"
+  },
+  {
+   "ts": 1781240719.1729083,
+   "id": 4,
+   "summary": "Proposal #4 approved",
+   "status": "approved",
+   "reason": "",
+   "deploy": "383add5f4f7c12fecaa352c9b8a6133fbbd4e3b6ae2980d485d2bf73fed1299a",
+   "explorer": "local://ledger/383add5f4f7c12fe"
+  },
+  {
+   "ts": 1781240717.470978,
+   "id": 4,
+   "summary": "Round 4: CSPR 15.0%, RE_INDEX_US 28.2%, US_TBILL_3M 29.1%, XAU 27.7%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "4e7aa98c8cdd890eaf6b383756aa20a375f0de4296e7b612b22f3b006f3d0bf8",
+   "explorer": "local://ledger/4e7aa98c8cdd890e"
+  },
+  {
+   "ts": 1781240716.4448009,
+   "id": 3,
+   "summary": "Proposal #3 approved",
+   "status": "approved",
+   "reason": "",
+   "deploy": "de59b8f42d4918d66fc18a8af4dd3f2fbf57b6c5abe0c5ef1b1e2186d1ec94a9",
+   "explorer": "local://ledger/de59b8f42d4918d6"
+  },
+  {
+   "ts": 1781240714.743237,
+   "id": 3,
+   "summary": "Round 3 (repaired): CSPR 15.0%, RE_INDEX_US 27.8%, US_TBILL_3M 29.5%, XAU 27.8%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "42f14d2b5517c5cce2108bbd73a71cb38b64c9813b039b7149ae5ce34e61739d",
+   "explorer": "local://ledger/42f14d2b5517c5cc"
+  },
+  {
+   "ts": 1781240714.7414243,
+   "id": 2,
+   "summary": "Round 3: CSPR 5.0%, US_TBILL_3M 70.0%, XAU 12.5%, RE_INDEX_US 12.5%",
+   "status": "vetoed",
+   "reason": "US_TBILL_3M at 70.0% breaches the 45% single-RWA cap; CSPR reserve 5.0% is below the 10% liquidity floor",
+   "deploy": "2dc1ce7f6909e3ab1f2fdb4e530113b07b9a18d9eb88b02433d152df1b653b3d",
+   "explorer": "local://ledger/2dc1ce7f6909e3ab"
+  },
+  {
+   "ts": 1781240714.7406387,
+   "id": 2,
+   "summary": "Round 3: CSPR 5.0%, US_TBILL_3M 70.0%, XAU 12.5%, RE_INDEX_US 12.5%",
+   "status": "pending",
+   "reason": "",
+   "deploy": "f3d4798c6783919fb61f39093f6ea6ffd837f535416f77aadafd986ed8239cdf",
+   "explorer": "local://ledger/f3d4798c6783919f"
+  },
+  {
+   "ts": 1781240713.7182863,
    "id": 1,
    "summary": "Proposal #1 approved",
    "status": "approved",
    "reason": "",
-   "deploy": "f707c6270acc688fb9f92c03181f25821f507fdc0548fd96aaf068791eed9138",
-   "explorer": "local://ledger/f707c6270acc688f"
+   "deploy": "08a7a499c756da40fe49bd77f281e337dfceea075cfab3945b06faf2088aabc8",
+   "explorer": "local://ledger/08a7a499c756da40"
   },
   {
-   "ts": 1781238810.5660746,
+   "ts": 1781240712.0170236,
    "id": 1,
    "summary": "Round 2: CSPR 15.0%, RE_INDEX_US 28.6%, US_TBILL_3M 28.6%, XAU 27.8%",
    "status": "pending",
    "reason": "",
-   "deploy": "7ce67076d17d5f5a96385c8b74f5f1c831765940e2762436b630b5918084440f",
-   "explorer": "local://ledger/7ce67076d17d5f5a"
+   "deploy": "b664227c5f5de5f78dd21972e17e1fcceaa2c38caa0410dff3978b63c5be2ec3",
+   "explorer": "local://ledger/b664227c5f5de5f7"
   },
   {
-   "ts": 1781238810.5318034,
+   "ts": 1781240710.9976718,
    "id": 0,
    "summary": "Proposal #0 approved",
    "status": "approved",
    "reason": "",
-   "deploy": "2c6dc913f574da86c433f59bd458138fa080711975f6ba41eae08d29cb4168b4",
-   "explorer": "local://ledger/2c6dc913f574da86"
+   "deploy": "fc389405d7fc300d91a6dbbe30ec1731f1d3a1b502f7312257f4e2670a731f00",
+   "explorer": "local://ledger/fc389405d7fc300d"
   },
   {
-   "ts": 1781238808.8299742,
+   "ts": 1781240709.296683,
    "id": 0,
    "summary": "Round 1: CSPR 15.0%, RE_INDEX_US 27.8%, US_TBILL_3M 29.3%, XAU 27.9%",
    "status": "pending",
    "reason": "",
-   "deploy": "12cb03862fc05686bb0364d44be2a7a62c10d61cd9fe53f5d240de9936ab657b",
-   "explorer": "local://ledger/12cb03862fc05686"
+   "deploy": "87dca912eae69a05a3c6a4f24f240634a2f432802cf589348d17ad904e755e74",
+   "explorer": "local://ledger/87dca912eae69a05"
   }
  ],
  "deploys": [
   {
-   "ts": 1781238812.2698805,
-   "hash": "89a411ee60a476d58cd33995f8328282879374850da1caea4945cfd26a629158",
+   "ts": 1781240724.641737,
+   "hash": "ac2242e4ccd58f63826f8f2bffebcdf21cd4036ae0f259a855f4fdc750bb0fa6",
    "kind": "vault.execute_rebalance",
-   "explorer": "local://ledger/89a411ee60a476d5"
+   "explorer": "local://ledger/ac2242e4ccd58f63"
   },
   {
-   "ts": 1781238812.2677677,
-   "hash": "f707c6270acc688fb9f92c03181f25821f507fdc0548fd96aaf068791eed9138",
+   "ts": 1781240724.6396234,
+   "hash": "81b66c5fd58fe03bb9b6668c8c422a6b4783d7a6779c0d047a2de3e82a276888",
    "kind": "gov.finalize",
-   "explorer": "local://ledger/f707c6270acc688f"
+   "explorer": "local://ledger/81b66c5fd58fe03b"
   },
   {
-   "ts": 1781238810.5653596,
-   "hash": "7ce67076d17d5f5a96385c8b74f5f1c831765940e2762436b630b5918084440f",
+   "ts": 1781240722.9372044,
+   "hash": "6fecae05f2fb151777fcecf875edd589c889fb8d948b72fd351b2e93b48a08ef",
    "kind": "gov.submit",
-   "explorer": "local://ledger/7ce67076d17d5f5a"
+   "explorer": "local://ledger/6fecae05f2fb1517"
   },
   {
-   "ts": 1781238810.562519,
-   "hash": "f76bcb8366c4992acd73660a177c9ce36d240f0af370672984b70f3e5bcf60cc",
+   "ts": 1781240722.9344034,
+   "hash": "f7ed6e88e067bff575cf840db7c7f639de8e5e963f22432155de4b11658c72b0",
    "kind": "market.anchor_x402_receipt",
-   "explorer": "local://ledger/f76bcb8366c4992a"
+   "explorer": "local://ledger/f7ed6e88e067bff5"
   },
   {
-   "ts": 1781238810.555433,
-   "hash": "0261795a087ead528406be3f073fc096583600defa5af784681f0ec28cfbcc83",
+   "ts": 1781240722.9278643,
+   "hash": "1e820200ec98ccd99a53d79cb9e263aae073e9a694eec11adb4b0d10e7df3dde",
    "kind": "market.anchor_x402_receipt",
-   "explorer": "local://ledger/0261795a087ead52"
+   "explorer": "local://ledger/1e820200ec98ccd9"
   },
   {
-   "ts": 1781238810.5481288,
-   "hash": "de178dcafd36006ddb9fa5b332ada283d767c52a9bc1c0a5ab53d41a51049960",
+   "ts": 1781240722.9213698,
+   "hash": "e06af49799c42d793b835e8c281c306eeb99f49ee5dda6965f10fc5ddded844f",
    "kind": "market.anchor_x402_receipt",
-   "explorer": "local://ledger/de178dcafd36006d"
+   "explorer": "local://ledger/e06af49799c42d79"
   },
   {
-   "ts": 1781238810.5399802,
-   "hash": "3b8253c5e1d038c5eb79cef9fd45720dd586729928c77a884ae8f44430cd3fca",
+   "ts": 1781240722.9144015,
+   "hash": "83f55c019e4ea48723e390b838b87881d1537e99c1f8795d450b95e66d96ebff",
    "kind": "registry.post_attestation",
-   "explorer": "local://ledger/3b8253c5e1d038c5"
+   "explorer": "local://ledger/83f55c019e4ea487"
   },
   {
-   "ts": 1781238810.5374267,
-   "hash": "bfa4c5d524fa52e3ef67c43df86db9cebc121592fbfc88ad56a4d8628f805779",
+   "ts": 1781240722.9117517,
+   "hash": "044dc27ad76c45570514ba3503a2a27132e42fd5a0bdbe77a770cc8f35af4517",
    "kind": "registry.post_attestation",
-   "explorer": "local://ledger/bfa4c5d524fa52e3"
+   "explorer": "local://ledger/044dc27ad76c4557"
   },
   {
-   "ts": 1781238810.5349104,
-   "hash": "87e76372c0cf8de12e2be65fc08f1a44f900b2bd4e3865fbb0ad00d91bfdc17e",
+   "ts": 1781240722.9090798,
+   "hash": "97cd355707de662b0e58ae8decebd463dcf59c3032f256a55aa4985b6d4acf26",
    "kind": "registry.post_attestation",
-   "explorer": "local://ledger/87e76372c0cf8de1"
+   "explorer": "local://ledger/97cd355707de662b"
   },
   {
-   "ts": 1781238810.5328453,
-   "hash": "4112e7cb6e9986636fb5e981900dc73de9a3836941cb0c827391ae353bc2233a",
+   "ts": 1781240721.9059203,
+   "hash": "7cc21718100d5840ae42b72ae1b5ee7463a6d0eb6280caa45722626d524de20d",
    "kind": "vault.execute_rebalance",
-   "explorer": "local://ledger/4112e7cb6e998663"
+   "explorer": "local://ledger/7cc21718100d5840"
   },
   {
-   "ts": 1781238810.5313458,
-   "hash": "2c6dc913f574da86c433f59bd458138fa080711975f6ba41eae08d29cb4168b4",
+   "ts": 1781240721.904171,
+   "hash": "a5dba37feebb0cea1e6d539fbcb291252294c81ddfd088fd5c82c08c47a6f01b",
    "kind": "gov.finalize",
-   "explorer": "local://ledger/2c6dc913f574da86"
+   "explorer": "local://ledger/a5dba37feebb0cea"
   },
   {
-   "ts": 1781238808.8293748,
-   "hash": "12cb03862fc05686bb0364d44be2a7a62c10d61cd9fe53f5d240de9936ab657b",
+   "ts": 1781240720.2020447,
+   "hash": "2db2456ec52aa9ac35108575ee6a2dfd8b986da4c9be1bec145298a2569c2198",
    "kind": "gov.submit",
-   "explorer": "local://ledger/12cb03862fc05686"
+   "explorer": "local://ledger/2db2456ec52aa9ac"
   },
   {
-   "ts": 1781238808.826724,
-   "hash": "af31ed56bc43d2b7ab2503a5a5ae8ab091c6c1a5b0abde0e424db440b5967539",
+   "ts": 1781240720.1998127,
+   "hash": "4563c62be3a5bae44a14ceda0e8567c6ac93a6dba057ba9eac2c61affdc09b48",
    "kind": "market.anchor_x402_receipt",
-   "explorer": "local://ledger/af31ed56bc43d2b7"
+   "explorer": "local://ledger/4563c62be3a5bae4"
   },
   {
-   "ts": 1781238808.820066,
-   "hash": "8249fce98c278c85c686b7ee92077d9ad8401e89c7270e8af2469d41a054f393",
+   "ts": 1781240720.193682,
+   "hash": "db6d1c384669273bb822fb65dd9f2e07f1c21daf0b784c59272491efe9f6ecab",
    "kind": "market.anchor_x402_receipt",
-   "explorer": "local://ledger/8249fce98c278c85"
+   "explorer": "local://ledger/db6d1c384669273b"
   },
   {
-   "ts": 1781238808.8130414,
-   "hash": "dea0772295c93c50634041f88023f128046f8c3f526891d15e3103407bc7f9d2",
+   "ts": 1781240720.1877213,
+   "hash": "1de4b736963f2c7c60e7adfc2bc675cd33196c7cadf38834208fc65710dcfac9",
    "kind": "market.anchor_x402_receipt",
-   "explorer": "local://ledger/dea0772295c93c50"
+   "explorer": "local://ledger/1de4b736963f2c7c"
   },
   {
-   "ts": 1781238808.7570822,
-   "hash": "389841094938edd0da7535c0704d680201ce30a2d3700f1672cf133b58d6e988",
+   "ts": 1781240720.1816225,
+   "hash": "690f48cd1f80acc8023be6d0fe372f1c7583629d12b13a199d0a11feaa722181",
    "kind": "registry.post_attestation",
-   "explorer": "local://ledger/389841094938edd0"
+   "explorer": "local://ledger/690f48cd1f80acc8"
   },
   {
-   "ts": 1781238808.7556105,
-   "hash": "5da5e87282788a2b6607f08a63b74dce04c3ddf468038626c462115dbd30afeb",
+   "ts": 1781240720.179134,
+   "hash": "d93bb86356dd620bf96c3cc22fdcb534c511802b8dfda721c5e2de4a7962cca4",
    "kind": "registry.post_attestation",
-   "explorer": "local://ledger/5da5e87282788a2b"
+   "explorer": "local://ledger/d93bb86356dd620b"
   },
   {
-   "ts": 1781238808.7542074,
-   "hash": "f7b0fce886c84cbec7f838bb50fe37a7c9dcf5b1c0e39371822fa05f79551bdd",
+   "ts": 1781240720.1767163,
+   "hash": "c04f470e4d1fd3f792975b6d9d35c78374a8b25ab2f51ca164cb9323653137b8",
    "kind": "registry.post_attestation",
-   "explorer": "local://ledger/f7b0fce886c84cbe"
+   "explorer": "local://ledger/c04f470e4d1fd3f7"
   },
   {
-   "ts": 1781238808.4420052,
-   "hash": "835817fcaa4c0b927d370718abed986dad3de2c434bd611ba0d144c8fd519557",
+   "ts": 1781240719.1739912,
+   "hash": "111792a773e9b0f4cbdf6385c0d359c725e629c6ade6c7895c2cb318fdf3b0de",
+   "kind": "vault.execute_rebalance",
+   "explorer": "local://ledger/111792a773e9b0f4"
+  },
+  {
+   "ts": 1781240719.1724422,
+   "hash": "383add5f4f7c12fecaa352c9b8a6133fbbd4e3b6ae2980d485d2bf73fed1299a",
+   "kind": "gov.finalize",
+   "explorer": "local://ledger/383add5f4f7c12fe"
+  },
+  {
+   "ts": 1781240717.4706013,
+   "hash": "4e7aa98c8cdd890eaf6b383756aa20a375f0de4296e7b612b22f3b006f3d0bf8",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/4e7aa98c8cdd890e"
+  },
+  {
+   "ts": 1781240717.4685242,
+   "hash": "43063dd3501a4c7c2f500cd92543c82efca69aa7338fe748a8cf1807829f3297",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/43063dd3501a4c7c"
+  },
+  {
+   "ts": 1781240717.46326,
+   "hash": "c06fb366c72b48a9090527297bd3d7974af5e2c399f6e320307c08951670dc78",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/c06fb366c72b48a9"
+  },
+  {
+   "ts": 1781240717.4577506,
+   "hash": "75020020213b10a939399b16701c957aa461394fc3cea1f6b44eb087658c9c8a",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/75020020213b10a9"
+  },
+  {
+   "ts": 1781240717.4521058,
+   "hash": "81dd67a6836601bffb9fc97882a739e42d5a8bed911148b1574030cf44cf3453",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/81dd67a6836601bf"
+  },
+  {
+   "ts": 1781240717.450342,
+   "hash": "2b3cfbe612d54fb390aeca73ea39cb6e9269264caab3dac88fd43d51cf5a269b",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/2b3cfbe612d54fb3"
+  },
+  {
+   "ts": 1781240717.4485714,
+   "hash": "22bbf8f7a10dfb96d9a498dccd22bde2344a06f78e11112f086c6c2e50d04c93",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/22bbf8f7a10dfb96"
+  },
+  {
+   "ts": 1781240716.445649,
+   "hash": "f5e93f9f0d0201efe28120b3440c550f3bc6aa77569c758aaa8422554090c4c6",
+   "kind": "vault.execute_rebalance",
+   "explorer": "local://ledger/f5e93f9f0d0201ef"
+  },
+  {
+   "ts": 1781240716.4443657,
+   "hash": "de59b8f42d4918d66fc18a8af4dd3f2fbf57b6c5abe0c5ef1b1e2186d1ec94a9",
+   "kind": "gov.finalize",
+   "explorer": "local://ledger/de59b8f42d4918d6"
+  },
+  {
+   "ts": 1781240714.7429073,
+   "hash": "42f14d2b5517c5cce2108bbd73a71cb38b64c9813b039b7149ae5ce34e61739d",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/42f14d2b5517c5cc"
+  },
+  {
+   "ts": 1781240714.7417634,
+   "hash": "2dc1ce7f6909e3ab1f2fdb4e530113b07b9a18d9eb88b02433d152df1b653b3d",
+   "kind": "gov.veto",
+   "explorer": "local://ledger/2dc1ce7f6909e3ab"
+  },
+  {
+   "ts": 1781240714.7402985,
+   "hash": "f3d4798c6783919fb61f39093f6ea6ffd837f535416f77aadafd986ed8239cdf",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/f3d4798c6783919f"
+  },
+  {
+   "ts": 1781240714.7385259,
+   "hash": "e325317153752ec04cc0b23f9e74ff17b307db38ff0522a4daf140570658a3fa",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/e325317153752ec0"
+  },
+  {
+   "ts": 1781240714.7335918,
+   "hash": "edd4959747a964a1e77f91b88a773107b1e3a3e14de99310461e1391eca879c5",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/edd4959747a964a1"
+  },
+  {
+   "ts": 1781240714.7284737,
+   "hash": "0e1f1f5a2febc166cfd238a98fc1f5ef49f96a5f6f07380c81aaab2e997d0ae3",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/0e1f1f5a2febc166"
+  },
+  {
+   "ts": 1781240714.7235172,
+   "hash": "6dd34aff5ba48eef8b6ec18da74ab3aa0bf21c0b93bd05204fd25513a4abd5f6",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/6dd34aff5ba48eef"
+  },
+  {
+   "ts": 1781240714.7221873,
+   "hash": "52849d0799df731cf8a26e5034f3b4ed365b04650f1d4880537f95343e372eaf",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/52849d0799df731c"
+  },
+  {
+   "ts": 1781240714.7208142,
+   "hash": "115be10fbd35f84ae31206c7baa3a1743731de679ef0bae38a29c46bf325eb85",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/115be10fbd35f84a"
+  },
+  {
+   "ts": 1781240713.7189171,
+   "hash": "d2e9b4cd9c34b58c58d58e0b1521c40b7fc0f060ed5108698e78cd468169b0d5",
+   "kind": "vault.execute_rebalance",
+   "explorer": "local://ledger/d2e9b4cd9c34b58c"
+  },
+  {
+   "ts": 1781240713.7180228,
+   "hash": "08a7a499c756da40fe49bd77f281e337dfceea075cfab3945b06faf2088aabc8",
+   "kind": "gov.finalize",
+   "explorer": "local://ledger/08a7a499c756da40"
+  },
+  {
+   "ts": 1781240712.0168083,
+   "hash": "b664227c5f5de5f78dd21972e17e1fcceaa2c38caa0410dff3978b63c5be2ec3",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/b664227c5f5de5f7"
+  },
+  {
+   "ts": 1781240712.0153341,
+   "hash": "db94ce62f51da07e5bf1cffbcf1bbfda5740abf17d68a4bc6b3d29e41bf1c056",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/db94ce62f51da07e"
+  },
+  {
+   "ts": 1781240712.0108619,
+   "hash": "bc06b28df3313e51eaa725e73a90e53093979a5880f9070536d7d0bdbc7c9881",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/bc06b28df3313e51"
+  },
+  {
+   "ts": 1781240712.0062554,
+   "hash": "7c3f7565e527ec26d6dfd77c9eba2d84b817cf40d8d874854accd74750717e57",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/7c3f7565e527ec26"
+  },
+  {
+   "ts": 1781240712.0015285,
+   "hash": "e3bc5bc84f6ea89e25e441712688cbffc229de99d56be9b5e8721eb583c013b7",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/e3bc5bc84f6ea89e"
+  },
+  {
+   "ts": 1781240712.0005605,
+   "hash": "97e6f17f5dc83fe65ec4fc33de615789817f55271fe838f6b82756b6b08312af",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/97e6f17f5dc83fe6"
+  },
+  {
+   "ts": 1781240711.9995558,
+   "hash": "eeb6f183b66c92fb5275c089e9d6851fa11cc5cb6d874dbe2a732956e999c0b8",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/eeb6f183b66c92fb"
+  },
+  {
+   "ts": 1781240710.9981604,
+   "hash": "da5fdabc024ef14305527e33ce3403ec4a1599a8144803aa832cd3f0f949a643",
+   "kind": "vault.execute_rebalance",
+   "explorer": "local://ledger/da5fdabc024ef143"
+  },
+  {
+   "ts": 1781240710.9974577,
+   "hash": "fc389405d7fc300d91a6dbbe30ec1731f1d3a1b502f7312257f4e2670a731f00",
+   "kind": "gov.finalize",
+   "explorer": "local://ledger/fc389405d7fc300d"
+  },
+  {
+   "ts": 1781240709.2965183,
+   "hash": "87dca912eae69a05a3c6a4f24f240634a2f432802cf589348d17ad904e755e74",
+   "kind": "gov.submit",
+   "explorer": "local://ledger/87dca912eae69a05"
+  },
+  {
+   "ts": 1781240709.2953048,
+   "hash": "ed353cf27269636faac73c7a1b29ce7e2ecffc36bc63504945d5debdf8838e36",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/ed353cf27269636f"
+  },
+  {
+   "ts": 1781240709.2910116,
+   "hash": "9778c38191b58e22f819aa47a17337a84692b28a3495bb93e50b530c634e566c",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/9778c38191b58e22"
+  },
+  {
+   "ts": 1781240709.286763,
+   "hash": "241ecb898b412d87ecbb45a3af29cc3ff91e83827392ca571cc62288640acbfd",
+   "kind": "market.anchor_x402_receipt",
+   "explorer": "local://ledger/241ecb898b412d87"
+  },
+  {
+   "ts": 1781240709.270916,
+   "hash": "a2224cc2fdb7e1d0080872d776518058d904b11d98648e2a2aa28f8c984fae11",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/a2224cc2fdb7e1d0"
+  },
+  {
+   "ts": 1781240709.2701235,
+   "hash": "92492fbc35417b3c98f2e0e067c2409fa74666f93edb2a3b78973478725e9ed4",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/92492fbc35417b3c"
+  },
+  {
+   "ts": 1781240709.2694194,
+   "hash": "834ac717905f36822e114ee783076dd83f6b4de6a79aa5fd0016247c03f25bfb",
+   "kind": "registry.post_attestation",
+   "explorer": "local://ledger/834ac717905f3682"
+  },
+  {
+   "ts": 1781240708.9659874,
+   "hash": "97159aa6c497ed66f2e408aba90146c875a9b024a251c1d742f91f28f9febd26",
    "kind": "vault.deposit",
-   "explorer": "local://ledger/835817fcaa4c0b92"
+   "explorer": "local://ledger/97159aa6c497ed66"
   },
   {
-   "ts": 1781238808.439602,
-   "hash": "96a80778b4caabaf8a7807e755e1cab7121ab29b8ff4f08bab5b433a53884b36",
+   "ts": 1781240708.9646223,
+   "hash": "9b6bc080a9f0892db0e0b4a064a4236299e3ca66e561d1f46ab5763710f41479",
    "kind": "registry.register",
-   "explorer": "local://ledger/96a80778b4caabaf"
+   "explorer": "local://ledger/9b6bc080a9f0892d"
   },
   {
-   "ts": 1781238808.4380844,
-   "hash": "3d339a6271d4188e66f01f25a3f4f6e0816e173ef337cec320dd11519cd254c6",
+   "ts": 1781240708.9636967,
+   "hash": "cbe58f53bba6e2e8be4c34a8929fdaffe0de72b54e7986aa1f00d30d13c535d1",
    "kind": "registry.register",
-   "explorer": "local://ledger/3d339a6271d4188e"
+   "explorer": "local://ledger/cbe58f53bba6e2e8"
   },
   {
-   "ts": 1781238808.4365904,
-   "hash": "cf956208b62e66c9eca1b4e5af87b3962fecbc533c8045c380c6ea5db096d786",
+   "ts": 1781240708.962774,
+   "hash": "d31143b6f1f0bfd1138a7e960df5ca83a7cec72de8951344a565abf187926f76",
    "kind": "registry.register",
-   "explorer": "local://ledger/cf956208b62e66c9"
+   "explorer": "local://ledger/d31143b6f1f0bfd1"
   }
  ]
 }
