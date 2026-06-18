@@ -211,27 +211,64 @@ def _contract_session_bytes(contract_hash: str, entry_point: str, args: list) ->
     )
 
 
-def _session_to_json(raw: bytes) -> dict:
-    tag = raw[0]
-    if tag == 0:
-        wasm_len = struct.unpack("<I", raw[1:5])[0]
-        wasm_bytes = raw[5 : 5 + wasm_len]
-        return {"ModuleBytes": {"module_bytes": wasm_bytes.hex(), "args": []}}
-    elif tag == 1:
-        ep_len = struct.unpack("<I", raw[33:37])[0]
-        ep = raw[37 : 37 + ep_len].decode()
-        return {
-            "StoredContractByHash": {
-                "hash": raw[1:33].hex(),
-                "entry_point": ep,
-                "args": [],
-            }
-        }
-    return {"ModuleBytes": {"module_bytes": raw.hex(), "args": []}}
+_CL_TYPE_NAMES = {
+    b"\x00": "Bool",
+    b"\x01": "I32",
+    b"\x02": "I64",
+    b"\x03": "U8",
+    b"\x04": "U32",
+    b"\x05": "U64",
+    b"\x06": "Unit",
+    b"\x07": "U128",
+    b"\x08": "U256",
+    b"\x09": "U512",
+    b"\x0a": "String",
+    b"\x0b": "Key",
+    b"\x0c": "URef",
+    b"\x0d": "Option",
+    b"\x0e": "List",
+    b"\x0f": "FixedList",
+    b"\x10": "Result",
+    b"\x11": "Pair",
+    b"\x12": "Map",
+    b"\x13": "Any",
+}
+
+
+def _args_to_json(named_args: list) -> list:
+    result = []
+    for name, cl_type_bytes, value_bytes in named_args:
+        cl_type_str = _CL_TYPE_NAMES.get(cl_type_bytes, "Any")
+        parsed = ""
+        if cl_type_bytes == _CL_STRING:
+            parsed = value_bytes[4:].decode("utf-8", errors="replace")
+        elif cl_type_bytes == _CL_U64:
+            parsed = str(struct.unpack("<Q", value_bytes)[0])
+        elif cl_type_bytes == _CL_U32:
+            parsed = str(struct.unpack("<I", value_bytes)[0])
+        elif cl_type_bytes == _CL_U512:
+            parsed = (
+                str(int.from_bytes(value_bytes[1:], "little"))
+                if value_bytes[0] > 0
+                else "0"
+            )
+        elif cl_type_bytes == _CL_BOOL:
+            parsed = "true" if value_bytes[0] else "false"
+        result.append(
+            [
+                name,
+                {"cl_type": cl_type_str, "bytes": value_bytes.hex(), "parsed": parsed},
+            ]
+        )
+    return result
 
 
 def send_deploy(
-    key: Ed25519PrivateKey, payment_motes: int, session_raw: bytes, node: str = NODES[0]
+    key: Ed25519PrivateKey,
+    payment_motes: int,
+    session_raw: bytes,
+    session_args: list,
+    node: str = NODES[0],
 ) -> str:
     pub = key_pub_bytes(key)
     acct_h = pub_to_account_hash(pub)
@@ -246,6 +283,29 @@ def send_deploy(
     dh_raw = _header_hash(acct_h, ts_ms, ttl, gas, bh, CHAIN)
     dh = dh_raw.hex()
     sig = key.sign(dh_raw)
+
+    tag = session_raw[0]
+    if tag == 0:
+        wasm_len = struct.unpack("<I", session_raw[1:5])[0]
+        wasm_bytes = session_raw[5 : 5 + wasm_len]
+        session_json = {
+            "ModuleBytes": {
+                "module_bytes": wasm_bytes.hex(),
+                "args": _args_to_json(session_args),
+            }
+        }
+    elif tag == 1:
+        ep_len = struct.unpack("<I", session_raw[33:37])[0]
+        ep = session_raw[37 : 37 + ep_len].decode()
+        session_json = {
+            "StoredContractByHash": {
+                "hash": session_raw[1:33].hex(),
+                "entry_point": ep,
+                "args": _args_to_json(session_args),
+            }
+        }
+    else:
+        session_json = {"ModuleBytes": {"module_bytes": session_raw.hex(), "args": []}}
 
     deploy = {
         "hash": dh,
@@ -273,7 +333,7 @@ def send_deploy(
                 ],
             }
         },
-        "session": _session_to_json(session_raw),
+        "session": session_json,
         "approvals": [{"signer": pub_hex, "signature": "01" + sig.hex()}],
     }
     result = _rpc("account_put_deploy", {"deploy": deploy}, node)
@@ -291,7 +351,9 @@ def install_wasm(
     node: str = NODES[0],
 ) -> str:
     wasm = Path(wasm_path).read_bytes()
-    return send_deploy(key, payment, _wasm_session_bytes(wasm, named_args or []), node)
+    args = named_args or []
+    session_raw = _wasm_session_bytes(wasm, args)
+    return send_deploy(key, payment, session_raw, args, node)
 
 
 def call_entry_point(
@@ -302,12 +364,9 @@ def call_entry_point(
     payment: int = 5_000_000_000,
     node: str = NODES[0],
 ) -> str:
-    return send_deploy(
-        key,
-        payment,
-        _contract_session_bytes(contract_hash, entry_point, named_args or []),
-        node,
-    )
+    args = named_args or []
+    session_raw = _contract_session_bytes(contract_hash, entry_point, args)
+    return send_deploy(key, payment, session_raw, args, node)
 
 
 # ── Arg helpers ───────────────────────────────────────────────────────────────
