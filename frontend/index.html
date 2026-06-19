@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helios — RWA Data Exchange for the Machine Economy</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wordmark">
+    <span class="sun" aria-hidden="true"></span>
+    <h1>HELIOS</h1>
+    <span class="tagline">RWA data exchange · machine economy · Casper</span>
+  </div>
+  <div class="netinfo">
+    <span class="badge" id="mode-badge">—</span>
+    <span class="mono" id="network-label">—</span>
+    <span class="pulse" id="live-dot" title="feed status"></span>
+  </div>
+</header>
+
+<section class="kpis" aria-label="Key metrics">
+  <div class="kpi"><span class="kpi-label">x402 payments settled</span><span class="kpi-value mono" id="kpi-payments">0</span></div>
+  <div class="kpi"><span class="kpi-label">Volume</span><span class="kpi-value mono" id="kpi-volume">0 <small>CSPR</small></span></div>
+  <div class="kpi"><span class="kpi-label">Oracles / listings</span><span class="kpi-value mono" id="kpi-oracles">0 / 0</span></div>
+  <div class="kpi"><span class="kpi-label">Attestations on-chain</span><span class="kpi-value mono" id="kpi-attest">0</span></div>
+  <div class="kpi"><span class="kpi-label">Fund NAV</span><span class="kpi-value mono" id="kpi-nav">1.000000</span></div>
+  <div class="kpi kpi-veto"><span class="kpi-label">Risk vetoes</span><span class="kpi-value mono" id="kpi-vetoes">0</span></div>
+</section>
+
+<section class="tape-wrap" aria-label="Live x402 settlements">
+  <span class="tape-title">SETTLEMENT&nbsp;TAPE</span>
+  <div class="tape" id="tape"><div class="tape-track" id="tape-track"></div></div>
+</section>
+
+<main class="grid">
+  <section class="panel" aria-labelledby="h-exchange">
+    <h2 id="h-exchange">Data exchange</h2>
+    <p class="panel-sub">Oracle agents selling RWA feeds per request. Reputation is earned on-chain, one settlement at a time.</p>
+    <div id="oracle-cards"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-fund">
+    <h2 id="h-fund">Fund console <span class="firstcustomer">first customer</span></h2>
+    <p class="panel-sub">The agent-operated vault buys its data on the exchange, then explains every allocation.</p>
+    <div class="nav-block">
+      <div class="nav-head"><span>NAV per share</span><span class="mono" id="nav-now">1.000000</span></div>
+      <svg id="nav-spark" viewBox="0 0 560 96" preserveAspectRatio="none" role="img" aria-label="NAV history"></svg>
+    </div>
+    <div id="decisions"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-gov">
+    <h2 id="h-gov">Governance &amp; provenance</h2>
+    <p class="panel-sub">Every proposal faces the risk agent's veto window. Every action leaves a transaction.</p>
+    <div id="governance"></div>
+    <h3 class="loglabel">Transaction log</h3>
+    <div id="deploys" class="mono"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Helios · built for the Casper Agentic Buildathon 2026</span>
+  <span class="mono" id="updated">—</span>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

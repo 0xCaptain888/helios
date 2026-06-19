@@ -1,0 +1,45 @@
+[package]
+name        = "helios-contracts"
+version     = "0.1.0"
+edition     = "2021"
+authors     = ["Helios Team"]
+license     = "Apache-2.0"
+description = "Helios: RWA data exchange on Casper"
+
+# ── Single cdylib crate; four contracts via feature flags ────────────────────
+# Build each:
+#   cargo build --release --target wasm32-unknown-unknown --features oracle-registry --no-default-features
+#   cargo build --release --target wasm32-unknown-unknown --features data-market    --no-default-features
+#   cargo build --release --target wasm32-unknown-unknown --features fund-vault     --no-default-features
+#   cargo build --release --target wasm32-unknown-unknown --features governance     --no-default-features
+
+[lib]
+name       = "helios_contracts"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Team-confirmed versions matching cep-78-enhanced-nft reference
+casper-contract = { version = "5", default-features = false }
+casper-types    = { version = "6", default-features = false }
+wee_alloc       = { version = "0.4", default-features = false }
+
+[dev-dependencies]
+# Host-side tests (no wasm target) — enable std features
+casper-contract = { version = "5", features = ["std", "test-support"] }
+casper-types    = { version = "6", features = ["std"] }
+
+[features]
+default          = []
+oracle-registry  = []
+data-market      = []
+fund-vault       = []
+governance       = []
+
+[profile.release]
+codegen-units = 1
+lto           = true
+opt-level     = "z"
+panic         = "abort"    # required for no_std wasm
+
+[profile.dev]
+panic = "abort"

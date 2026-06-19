@@ -1,0 +1,16 @@
+{
+  "name": "helios-deployer",
+  "version": "1.0.0",
+  "description": "Helios Casper Testnet deployer (JS SDK)",
+  "scripts": {
+    "status": "node scripts/deploy_helios.js status",
+    "keygen": "node scripts/deploy_helios.js keygen",
+    "deploy-all": "node scripts/deploy_helios.js deploy-all"
+  },
+  "dependencies": {
+    "casper-js-sdk": "^2.15.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

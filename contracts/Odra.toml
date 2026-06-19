@@ -1,0 +1,11 @@
+[[contracts]]
+fqn = "helios_contracts::oracle_registry::OracleRegistry"
+
+[[contracts]]
+fqn = "helios_contracts::data_market::DataMarket"
+
+[[contracts]]
+fqn = "helios_contracts::fund_vault::FundVault"
+
+[[contracts]]
+fqn = "helios_contracts::governance::Governance"
