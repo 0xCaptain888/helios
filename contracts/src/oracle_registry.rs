@@ -2,7 +2,7 @@ extern crate alloc;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use casper_contract::{contract_api::{runtime, storage}, unwrap_or_revert::UnwrapOrRevert};
-use casper_types::{CLType, EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Parameter, contracts::NamedKeys};
+use casper_types::{CLType, EntityEntryPoint, EntryPointAccess, EntryPointType, EntryPointPayment, EntryPoints, Parameter, contracts::NamedKeys};
 
 fn get_uref(name: &str) -> casper_types::URef {
     runtime::get_key(name).unwrap_or_revert().into_uref().unwrap_or_revert()
@@ -42,19 +42,19 @@ fn compute_score(sett: u64, acc: u64, disp: u64) -> u32 {
 #[no_mangle]
 pub extern "C" fn call() {
     let mut eps = EntryPoints::new();
-    eps.add_entry_point(EntryPoint::new("register", vec![Parameter::new("name", CLType::String), Parameter::new("category", CLType::String), Parameter::new("endpoint", CLType::String), Parameter::new("price_motes", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("post_attestation", vec![Parameter::new("feed_key", CLType::String), Parameter::new("value", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("credit_settlement", vec![Parameter::new("oracle", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("score_attestation", vec![Parameter::new("oracle", CLType::String), Parameter::new("accurate", CLType::Bool)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("set_market", vec![Parameter::new("market", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("get_oracle", vec![Parameter::new("oracle", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("get_reputation", vec![Parameter::new("oracle", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
+    eps.add_entry_point(EntityEntryPoint::new("register", vec![Parameter::new("name", CLType::String), Parameter::new("category", CLType::String), Parameter::new("endpoint", CLType::String), Parameter::new("price_motes", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("post_attestation", vec![Parameter::new("feed_key", CLType::String), Parameter::new("value", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("credit_settlement", vec![Parameter::new("oracle", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("score_attestation", vec![Parameter::new("oracle", CLType::String), Parameter::new("accurate", CLType::Bool)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("set_market", vec![Parameter::new("market", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("get_oracle", vec![Parameter::new("oracle", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("get_reputation", vec![Parameter::new("oracle", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
     let admin = runtime::get_caller();
     let mut nk = NamedKeys::new();
     nk.insert("admin".into(), storage::new_uref(admin.to_string()).into());
     nk.insert("oracle_count".into(), storage::new_uref(0u64).into());
     nk.insert("market".into(), storage::new_uref(String::new()).into());
-    let (hash, _) = storage::new_contract(eps, Some(nk), Some("helios_oracle_registry_hash".into()), Some("helios_oracle_registry_access".into()));
+    let (hash, _) = storage::new_contract(eps, Some(nk), Some("helios_oracle_registry_hash".into()), Some("helios_oracle_registry_access".into()), None);
     runtime::put_key("oracle_registry_contract_hash", hash.into());
 }
 

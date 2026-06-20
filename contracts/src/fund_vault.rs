@@ -2,7 +2,7 @@ extern crate alloc;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use casper_contract::{contract_api::{runtime, storage}, unwrap_or_revert::UnwrapOrRevert};
-use casper_types::{CLType, EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Parameter, contracts::NamedKeys};
+use casper_types::{CLType, EntityEntryPoint, EntryPointAccess, EntryPointType, EntryPointPayment, EntryPoints, Parameter, contracts::NamedKeys};
 
 fn get_uref(name: &str) -> casper_types::URef { runtime::get_key(name).unwrap_or_revert().into_uref().unwrap_or_revert() }
 fn read_str(u: casper_types::URef) -> String { storage::read::<String>(u).unwrap_or_revert().unwrap_or_default() }
@@ -11,11 +11,11 @@ fn read_u64(u: casper_types::URef) -> u64 { storage::read::<u64>(u).unwrap_or_re
 #[no_mangle]
 pub extern "C" fn call() {
     let mut eps = EntryPoints::new();
-    eps.add_entry_point(EntryPoint::new("deposit", vec![Parameter::new("amount", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("execute_rebalance", vec![Parameter::new("proposal_id", CLType::U64), Parameter::new("targets", CLType::String), Parameter::new("weights_bps", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("record_nav", vec![Parameter::new("nav_motes", CLType::U64), Parameter::new("yield_bps", CLType::U32)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("get_nav", vec![], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("set_governance", vec![Parameter::new("governance_hash", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
+    eps.add_entry_point(EntityEntryPoint::new("deposit", vec![Parameter::new("amount", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("execute_rebalance", vec![Parameter::new("proposal_id", CLType::U64), Parameter::new("targets", CLType::String), Parameter::new("weights_bps", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("record_nav", vec![Parameter::new("nav_motes", CLType::U64), Parameter::new("yield_bps", CLType::U32)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("get_nav", vec![], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("set_governance", vec![Parameter::new("governance_hash", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
     let operator: String = runtime::get_named_arg("operator");
     let governance_hash: String = runtime::get_named_arg("governance_hash");
     let mut nk = NamedKeys::new();
@@ -24,7 +24,7 @@ pub extern "C" fn call() {
     nk.insert("total_deposits".into(), storage::new_uref(0u64).into());
     nk.insert("nav_motes".into(), storage::new_uref(0u64).into());
     nk.insert("rebalance_count".into(), storage::new_uref(0u64).into());
-    let (hash, _) = storage::new_contract(eps, Some(nk), Some("helios_fund_vault_hash".into()), Some("helios_fund_vault_access".into()));
+    let (hash, _) = storage::new_contract(eps, Some(nk), Some("helios_fund_vault_hash".into()), Some("helios_fund_vault_access".into()), None);
     runtime::put_key("fund_vault_contract_hash", hash.into());
 }
 

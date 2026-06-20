@@ -2,7 +2,7 @@ extern crate alloc;
 use alloc::string::{String, ToString};
 use alloc::vec;
 use casper_contract::{contract_api::{runtime, storage}, unwrap_or_revert::UnwrapOrRevert};
-use casper_types::{CLType, EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, Parameter, contracts::NamedKeys};
+use casper_types::{CLType, EntityEntryPoint, EntryPointAccess, EntryPointType, EntryPointPayment, EntryPoints, Parameter, contracts::NamedKeys};
 
 const STATE_PENDING: u8 = 0;
 const STATE_APPROVED: u8 = 1;
@@ -27,11 +27,11 @@ fn decode_proposal(s: &str) -> Option<(String, u64, u8)> {
 #[no_mangle]
 pub extern "C" fn call() {
     let mut eps = EntryPoints::new();
-    eps.add_entry_point(EntryPoint::new("propose", vec![Parameter::new("description", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("veto", vec![Parameter::new("proposal_id", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("finalize", vec![Parameter::new("proposal_id", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("get_proposal", vec![Parameter::new("proposal_id", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
-    eps.add_entry_point(EntryPoint::new("proposal_count", vec![], CLType::Unit, EntryPointAccess::Public, EntryPointType::Contract));
+    eps.add_entry_point(EntityEntryPoint::new("propose", vec![Parameter::new("description", CLType::String)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("veto", vec![Parameter::new("proposal_id", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("finalize", vec![Parameter::new("proposal_id", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("get_proposal", vec![Parameter::new("proposal_id", CLType::U64)], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
+    eps.add_entry_point(EntityEntryPoint::new("proposal_count", vec![], CLType::Unit, EntryPointAccess::Public, EntryPointType::Called, EntryPointPayment::Caller));
     let proposer: String = runtime::get_named_arg("proposer");
     let risk_agent: String = runtime::get_named_arg("risk_agent");
     let veto_window_ms: u64 = runtime::get_named_arg("veto_window_ms");
@@ -40,7 +40,7 @@ pub extern "C" fn call() {
     nk.insert("risk_agent".into(), storage::new_uref(risk_agent).into());
     nk.insert("veto_window_ms".into(), storage::new_uref(veto_window_ms).into());
     nk.insert("proposal_count".into(), storage::new_uref(0u64).into());
-    let (hash, _) = storage::new_contract(eps, Some(nk), Some("helios_governance_hash".into()), Some("helios_governance_access".into()));
+    let (hash, _) = storage::new_contract(eps, Some(nk), Some("helios_governance_hash".into()), Some("helios_governance_access".into()), None);
     runtime::put_key("governance_contract_hash", hash.into());
 }
 
