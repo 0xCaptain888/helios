@@ -8,15 +8,15 @@ MockChain      — deterministic local ledger (JSON). Mirrors the four Helios
 
 TestnetChain   — uses scripts/casper_deploy.py (pure Python) to submit
                  transactions against Casper Testnet using keys & contract
-                 hashes from agents/testnet.env. Read paths use CSPR.cloud or
-                 RPC queries. No casper-client binary required.
+                 hashes from agents/testnet.env. Maintains a local `state`
+                 dict that mirrors on-chain data for agent read paths.
+                 No casper-client binary required.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
 import sys
 import threading
 import time
@@ -298,8 +298,9 @@ class MockChain:
 class TestnetChain:
     """Casper Testnet backend via casper_deploy.py (pure Python).
 
-    Write paths use the Python deploy module; reads use RPC queries.
-    No casper-client binary required.
+    Maintains a local `state` dict that mirrors on-chain data so agents can
+    read registry/market/gov/vault state the same way as MockChain.
+    Write paths use the Python deploy module; no casper-client binary required.
     """
 
     NODE = "https://node.testnet.casper.network/rpc"
@@ -337,6 +338,7 @@ class TestnetChain:
             wait_for_deploy,
             arg_string,
             arg_u64,
+            arg_u32,
         )
 
         self._CasperKey = CasperKey
@@ -344,6 +346,28 @@ class TestnetChain:
         self._wait_for_deploy = wait_for_deploy
         self._arg_string = arg_string
         self._arg_u64 = arg_u64
+        self._arg_u32 = arg_u32
+
+        # Local state mirror — same structure as MockChain.state
+        # Agents read from this; it is updated after each on-chain call.
+        self.state: dict = {
+            "accounts": {},
+            "deploys": [],
+            "registry": {"oracles": {}, "order": []},
+            "market": {"listings": [], "treasury": 0, "fee_bps": config.MARKET_FEE_BPS},
+            "vault": {
+                "operator": None,
+                "deposits": 0,
+                "positions": [],
+                "history": [],
+                "nav_micro": 1_000_000,
+            },
+            "gov": {
+                "proposals": [],
+                "veto_window_ms": int(config.VETO_WINDOW_SECONDS * 1000),
+            },
+            "attestations": [],
+        }
 
     def _call(
         self,
@@ -361,11 +385,48 @@ class TestnetChain:
         self._wait_for_deploy(deploy_hash, node=self.NODE)
         return deploy_hash
 
-    # The same surface as MockChain, mapped onto contract entry points.
+    def _record_deploy(self, kind: str, caller: str, args: dict) -> str:
+        """Record a deploy in local state (mirrors MockChain._deploy)."""
+        record = {
+            "kind": kind,
+            "caller": caller,
+            "args": args,
+            "ts": time.time(),
+            "nonce": len(self.state["deploys"]),
+        }
+        deploy_hash = _h(record)
+        self.state["deploys"].append({"hash": deploy_hash, **record})
+        return deploy_hash
+
+    # ---------- accounts ----------
+    def create_account(
+        self, name: str, balance_motes: int, address: str | None = None
+    ) -> str:
+        addr = address or ("account-hash-" + _h({"acct": name})[:56])
+        with _LOCK:
+            self.state["accounts"][addr] = {"name": name, "balance": int(balance_motes)}
+        return addr
+
+    def balance(self, addr: str) -> int:
+        return int(self.state["accounts"].get(addr, {}).get("balance", 0))
+
+    def transfer(self, frm: str, to: str, amount: int, memo: str = "") -> str:
+        with _LOCK:
+            acc = self.state["accounts"]
+            if acc.get(frm, {}).get("balance", 0) < amount:
+                raise ValueError(f"insufficient funds: {frm}")
+            acc[frm]["balance"] -= amount
+            acc.setdefault(to, {"name": to[:14], "balance": 0})
+            acc[to]["balance"] += amount
+            return self._record_deploy(
+                "transfer", frm, {"to": to, "amount": amount, "memo": memo}
+            )
+
+    # ---------- OracleRegistry ----------
     def register_oracle(
         self, caller_key: str, name: str, category: str, endpoint: str, price_motes: int
     ) -> str:
-        return self._call(
+        deploy_hash = self._call(
             caller_key,
             self.contracts["registry"],
             "register",
@@ -376,9 +437,29 @@ class TestnetChain:
                 self._arg_u64("price_motes", price_motes),
             ],
         )
+        # Update local state mirror
+        with _LOCK:
+            reg = self.state["registry"]
+            caller_addr = caller_key  # simplified: use key path as identifier
+            reg["oracles"][caller_addr] = {
+                "name": name,
+                "category": category,
+                "endpoint": endpoint,
+                "price_motes": price_motes,
+                "active": True,
+                "reputation": {
+                    "settlements": 0,
+                    "attestations": 0,
+                    "accurate": 0,
+                    "disputed": 0,
+                    "score_bps": 5000,
+                },
+            }
+            reg["order"].append(caller_addr)
+        return deploy_hash
 
     def post_attestation(self, caller_key: str, feed_key: str, value: str) -> str:
-        return self._call(
+        deploy_hash = self._call(
             caller_key,
             self.contracts["registry"],
             "post_attestation",
@@ -387,7 +468,21 @@ class TestnetChain:
                 self._arg_string("value", value),
             ],
         )
+        with _LOCK:
+            oracle = self.state["registry"]["oracles"].get(caller_key)
+            if oracle:
+                oracle["reputation"]["attestations"] += 1
+            self.state["attestations"].append(
+                {
+                    "oracle": caller_key,
+                    "feed_key": feed_key,
+                    "value": value,
+                    "ts": time.time(),
+                }
+            )
+        return deploy_hash
 
+    # ---------- DataMarket ----------
     def list_feed(
         self,
         caller_key: str,
@@ -395,8 +490,8 @@ class TestnetChain:
         title: str,
         price_motes: int,
         endpoint: str,
-    ) -> str:
-        return self._call(
+    ) -> int:
+        deploy_hash = self._call(
             caller_key,
             self.contracts["market"],
             "list_feed",
@@ -407,72 +502,67 @@ class TestnetChain:
                 self._arg_string("endpoint", endpoint),
             ],
         )
+        with _LOCK:
+            market = self.state["market"]
+            listing_id = len(market["listings"])
+            market["listings"].append(
+                {
+                    "id": listing_id,
+                    "oracle": caller_key,
+                    "feed_key": feed_key,
+                    "title": title,
+                    "price_motes": price_motes,
+                    "endpoint": endpoint,
+                    "active": True,
+                    "sales": 0,
+                    "revenue_motes": 0,
+                }
+            )
+        return listing_id
 
     def anchor_x402_receipt(
         self, caller_key: str, listing_id: int, amount_motes: int, receipt: str
     ) -> str:
-        return self._call(
+        deploy_hash = self._call(
             caller_key,
             self.contracts["market"],
             "anchor_x402_receipt",
             [
                 self._arg_u64("listing_id", listing_id),
-                self._arg_string(
-                    "oracle", caller_key
-                ),  # simplified: use key path as oracle identifier
+                self._arg_string("oracle", caller_key),
                 self._arg_u64("amount_motes", amount_motes),
                 self._arg_string("receipt_hash", receipt),
             ],
         )
+        with _LOCK:
+            listing = self.state["market"]["listings"][listing_id]
+            listing["sales"] += 1
+            listing["revenue_motes"] += amount_motes
+        return deploy_hash
 
-    def gov_submit(self, caller_key: str, summary: str, payload: str) -> str:
-        return self._call(
-            caller_key,
-            self.contracts["gov"],
-            "propose",
-            [
-                self._arg_string("description", summary),
-            ],
-        )
+    # ---------- FundVault ----------
+    def vault_set_operator(self, operator: str) -> None:
+        with _LOCK:
+            self.state["vault"]["operator"] = operator
 
-    def gov_veto(self, caller_key: str, proposal_id: int, reason: str) -> str:
-        return self._call(
-            caller_key,
-            self.contracts["gov"],
-            "veto",
-            [
-                self._arg_u64("proposal_id", proposal_id),
-            ],
-        )
-
-    def gov_finalize(self, caller_key: str, proposal_id: int) -> str:
-        return self._call(
-            caller_key,
-            self.contracts["gov"],
-            "finalize",
-            [
-                self._arg_u64("proposal_id", proposal_id),
-            ],
-        )
+    def vault_deposit(self, caller: str, amount: int) -> str:
+        with _LOCK:
+            self.state["accounts"][caller]["balance"] -= amount
+            self.state["vault"]["deposits"] += amount
+        return self._record_deploy("vault.deposit", caller, {"amount": amount})
 
     def execute_rebalance(
         self,
         caller_key: str,
         proposal_id: int,
-        positions_json: str,
+        positions: list[dict],
         nav_mark_micro: int,
         data_receipts: str,
     ) -> str:
-        # Parse positions to extract targets and weights
-        positions = (
-            json.loads(positions_json)
-            if isinstance(positions_json, str)
-            else positions_json
-        )
         targets = ",".join(p.get("asset", "unknown") for p in positions)
         weights_bps = ",".join(str(p.get("weight_bps", 0)) for p in positions)
 
-        return self._call(
+        deploy_hash = self._call(
             caller_key,
             self.contracts["vault"],
             "execute_rebalance",
@@ -482,6 +572,77 @@ class TestnetChain:
                 self._arg_string("weights_bps", weights_bps),
             ],
         )
+        with _LOCK:
+            vault = self.state["vault"]
+            vault["positions"] = positions
+            vault["nav_micro"] = nav_mark_micro
+            vault["history"].append(
+                {
+                    "proposal_id": proposal_id,
+                    "positions": positions,
+                    "nav_mark_micro": nav_mark_micro,
+                    "data_receipts": data_receipts,
+                    "ts": time.time(),
+                }
+            )
+        return deploy_hash
+
+    # ---------- Governance ----------
+    def gov_submit(
+        self, caller_key: str, summary: str, payload: str
+    ) -> tuple[int, str]:
+        deploy_hash = self._call(
+            caller_key,
+            self.contracts["gov"],
+            "propose",
+            [
+                self._arg_string("description", summary),
+            ],
+        )
+        with _LOCK:
+            proposals = self.state["gov"]["proposals"]
+            pid = len(proposals)
+            proposals.append(
+                {
+                    "id": pid,
+                    "proposer": caller_key,
+                    "summary": summary,
+                    "payload": payload,
+                    "created_at": time.time(),
+                    "status": "pending",
+                    "veto_reason": "",
+                }
+            )
+        return pid, deploy_hash
+
+    def gov_veto(self, caller_key: str, proposal_id: int, reason: str) -> str:
+        deploy_hash = self._call(
+            caller_key,
+            self.contracts["gov"],
+            "veto",
+            [
+                self._arg_u64("proposal_id", proposal_id),
+            ],
+        )
+        with _LOCK:
+            p = self.state["gov"]["proposals"][proposal_id]
+            p["status"] = "vetoed"
+            p["veto_reason"] = reason
+        return deploy_hash
+
+    def gov_finalize(self, caller_key: str, proposal_id: int) -> str:
+        deploy_hash = self._call(
+            caller_key,
+            self.contracts["gov"],
+            "finalize",
+            [
+                self._arg_u64("proposal_id", proposal_id),
+            ],
+        )
+        with _LOCK:
+            p = self.state["gov"]["proposals"][proposal_id]
+            p["status"] = "approved"
+        return deploy_hash
 
     def explorer_link(self, deploy_hash: str) -> str:
         return f"https://testnet.cspr.live/transaction/{deploy_hash}"

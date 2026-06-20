@@ -184,10 +184,9 @@ def main():
 
         bad = 0
         for w in needed:
-            exports = check_wasm_exports.wasm_exports(str(WASM / w))
-            names = [n for n, k in exports if k == "func"]
-            if "call" not in names:
-                print(f"  ✗ {w}: no `call` export ({names})")
+            errors, func_names, has_mem = check_wasm_exports.check_file(str(WASM / w))
+            if errors:
+                print(f"  ✗ {w}: {errors[0]}")
                 bad += 1
             else:
                 print(f"  ✓ {w}")

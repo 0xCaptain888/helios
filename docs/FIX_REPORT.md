@@ -427,7 +427,7 @@ const fundAcct = keys["fund_agent"].publicKey.toAccountHashStr();
 | `contracts/src/data_market.rs` | 重写 |
 | `contracts/src/fund_vault.rs` | 重写 |
 | `contracts/src/governance.rs` | 重写 |
-| `docs/DEPLOYMENT.md` | 新建完整部署文档 |
+| `docs/DEPLOYMENT_GUIDE.md` | 新建完整部署文档 |
 
 ### 修改
 
@@ -435,7 +435,7 @@ const fundAcct = keys["fund_agent"].publicKey.toAccountHashStr();
 |------|------|
 | `contracts/Cargo.toml` | `casper-contract` 4→5，`casper-types` 4→6，添加 `wee_alloc`，`panic = "abort"` |
 | `scripts/build_contracts.sh` | 添加 `RUSTFLAGS` 检查，说明 `--no-default-features` 用法 |
-| `scripts/deploy_helios.js` | 修复 `account_hash` 计算（sha256→SDK 内置） |
+| `scripts/deploy_helios.py` | 重写为使用 CasperKey API，支持 secp256k1 |
 
 ---
 

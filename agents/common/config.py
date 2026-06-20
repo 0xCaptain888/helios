@@ -2,12 +2,13 @@
 
 Two run modes, switched by env var HELIOS_MODE:
   * mock     (default) — a local ledger simulates the Casper chain so the whole
-               machine economy runs end-to-end offline. Every state change is
-               recorded as a pseudo-deploy with a deterministic hash.
-  * testnet  — chain writes go through `casper-client` against Casper Testnet.
-               Requires keys + deployed contract hashes in agents/testnet.env
-               (see docs and 03_资料准备清单).
+                machine economy runs end-to-end offline. Every state change is
+                recorded as a pseudo-deploy with a deterministic hash.
+  * testnet  — chain writes go through `scripts/casper_deploy.py` (pure Python)
+                against Casper Testnet. Requires keys + deployed contract hashes
+                in agents/testnet.env (see docs/DEPLOYMENT_GUIDE.md).
 """
+
 from __future__ import annotations
 
 import os
@@ -32,17 +33,17 @@ ORACLE_PORTS = {
 # Demo economics (motes; 1 CSPR = 1_000_000_000 motes)
 CSPR = 1_000_000_000
 PRICES_MOTES = {
-    "us_tbill_3m": 2 * CSPR,      # 2 CSPR per quote
-    "xau_usd": 3 * CSPR,          # 3 CSPR per quote
-    "re_index_us": 5 * CSPR,      # 5 CSPR per quote
+    "us_tbill_3m": 2 * CSPR,  # 2 CSPR per quote
+    "xau_usd": 3 * CSPR,  # 3 CSPR per quote
+    "re_index_us": 5 * CSPR,  # 5 CSPR per quote
 }
 MARKET_FEE_BPS = 250  # 2.5% protocol fee, mirrors DataMarket contract
 
 VETO_WINDOW_SECONDS = float(os.environ.get("HELIOS_VETO_WINDOW", "1.5"))
 
 # Risk policy enforced by the risk agent (mirrors the demo narrative)
-RISK_MAX_SINGLE_RWA_BPS = 4_500   # no single RWA position above 45%
-RISK_MIN_CASH_BPS = 1_000         # keep at least 10% in CSPR
+RISK_MAX_SINGLE_RWA_BPS = 4_500  # no single RWA position above 45%
+RISK_MIN_CASH_BPS = 1_000  # keep at least 10% in CSPR
 RISK_MAX_DATA_AGE_SECONDS = 120.0
 
 

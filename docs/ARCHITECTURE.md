@@ -14,7 +14,7 @@ Layer 3  Consumers        fund agent (built-in first customer), any external
 Layer 2  Settlement       x402 micropayments (HTTP) + on-chain anchoring,
                           or fully on-chain payable purchase
 Layer 1  Trust & state    OracleRegistry · DataMarket · FundVault · Governance
-                          (Odra contracts on Casper)
+                          (native Casper contracts: casper-contract v5 / casper-types v6, #![no_std])
 ```
 
 ## Contracts
@@ -43,11 +43,14 @@ settled sales. Buying volume is the only way to look established.
 |---|---|
 | `list_feed(feed_key, title, price_motes, endpoint)` | one listing per feed key |
 | `purchase(listing_id)` **payable** | exact price required; 2.5% protocol fee to treasury, remainder paid out to the oracle instantly; credits settlement |
-| `anchor_x402_receipt(listing_id, amount, receipt)` | records an off-band x402 settlement (facilitator tx hash) on-chain; credits settlement |
-| `withdraw_treasury(to)` | admin |
+| `anchor_x402_receipt(listing_id, oracle, amount_motes, receipt_hash)` | records an off-band x402 settlement (facilitator tx hash) on-chain; updates listing sales/revenue |
+| `set_fee_bps(fee_bps)` | admin |
 
-The cross-contract call `registry.credit_settlement(oracle)` is the hinge of
-the whole flywheel.
+> **Note:** `purchase()` and `anchor_x402_receipt()` update local listing state
+> (sales count, revenue, treasury). The cross-contract call to
+> `registry.credit_settlement(oracle)` that grows oracle reputation on-chain
+> is planned for a future upgrade — currently reputation is tracked in the
+> local state mirror maintained by the agents.
 
 ### FundVault
 Operator-gated (`execute_rebalance` callable only by the fund agent account).
@@ -107,9 +110,11 @@ fund agent                oracle endpoint            facilitator           chain
 - **MockChain** — deterministic local ledger mirroring all four contracts'
   entry points; every mutation yields a sha256 pseudo deploy hash. This is
   what `demo.py` drives, so the demo is reproducible anywhere with zero deps.
-- **TestnetChain** — same surface, but each call shells out to
-  `casper-client put-txn` against Casper Testnet using keys and contract
-  hashes from `agents/testnet.env`. See `docs/TESTNET.md`.
+- **TestnetChain** — same surface, but each call goes through
+  `scripts/casper_deploy.py` (pure Python) against Casper Testnet using keys
+  and contract hashes from `agents/testnet.env`. Maintains a local `state`
+  mirror so agents can read registry/market/gov/vault data identically to
+  mock mode. See `docs/DEPLOYMENT_GUIDE.md`.
 
 ## Frontend
 

@@ -44,6 +44,14 @@ NODES = [
 CHAIN = "casper-test"
 EXPLORER = "https://testnet.cspr.live"
 
+
+def _rpc_url(node: str) -> str:
+    """Build the RPC endpoint URL. Some providers use /rpc suffix, some don't."""
+    if node.endswith("/rpc"):
+        return node
+    return f"{node}/rpc"
+
+
 # ── Casper serialisation helpers ──────────────────────────────────────────────
 
 
@@ -134,22 +142,17 @@ class CasperKey:
             # ed25519: 64 bytes raw
             return self._raw.sign(data)
         else:
-            # secp256k1: DER → raw r||s (64 bytes)
+            # secp256k1: ECDSA with SHA-256, convert DER → raw r||s (64 bytes)
             der_sig = self._raw.sign(data, ec.ECDSA(hashes.SHA256()))
-            # Wait — Casper uses raw message signing with secp256k1, not SHA256
-            # Actually Casper signs the deploy hash directly with ECDSA
-            # The signature is DER-encoded from the library, we need to convert to raw r||s
             return self._der_to_raw64(der_sig)
 
     def sign_deploy(self, header_hash_bytes: bytes) -> bytes:
         """Sign the header hash for a deploy. Returns raw 64-byte signature."""
         if self._tag == 0x01:
+            # ed25519: sign directly, returns 64 bytes
             return self._raw.sign(header_hash_bytes)
         else:
-            # secp256k1: sign with ECDSA using the hash directly
-            from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
-            from cryptography.hazmat.primitives import hashes
-
+            # secp256k1: ECDSA with SHA-256, convert DER → raw r||s (64 bytes)
             der_sig = self._raw.sign(header_hash_bytes, ECDSA(hashes.SHA256()))
             return self._der_to_raw64(der_sig)
 
@@ -208,7 +211,7 @@ def _rpc(method: str, params: Any, node: str = NODES[0]) -> Any:
         {"id": 1, "jsonrpc": "2.0", "method": method, "params": params}
     ).encode()
     req = urllib.request.Request(
-        f"{node}/rpc",
+        _rpc_url(node),
         data=body,
         headers={"Content-Type": "application/json"},
         method="POST",

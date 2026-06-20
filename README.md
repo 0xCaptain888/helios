@@ -132,6 +132,29 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 
 ## Recent changes (2026-06-20)
 
+### Latest fixes (code quality & consistency)
+
+**Critical fixes:**
+- Fixed `deploy_helios.py` calling nonexistent `check_wasm_exports.wasm_exports()` function
+- Fixed `TestnetChain` missing methods (`create_account`, `balance`, `transfer`, `vault_set_operator`, `vault_deposit`)
+- Fixed `TestnetChain.gov_submit` return type to match `MockChain` (now returns `tuple[int, str]`)
+- Added `state` attribute to `TestnetChain` so agents can read registry/market/gov/vault data in testnet mode
+
+**Minor fixes:**
+- Fixed `fund_vault.rs` u128→u64 overflow with `saturating_add`
+- Cleaned up confusing comments in `casper_deploy.py`
+- Fixed RPC URL handling to avoid double `/rpc` suffix
+
+**Documentation fixes:**
+- Removed all stale Odra references from `ARCHITECTURE.md`, `TESTNET.md`, `FIX_REPORT.md`
+- Fixed phantom `withdraw_treasury` entry point in `ARCHITECTURE.md`
+- Clarified cross-contract `credit_settlement` call status (planned for future upgrade)
+- Fixed Governance parameter names (`proposer` not `fund_agent`)
+- Removed stale Odra troubleshooting section from `TESTNET.md`
+- Fixed `config.py` docstring and removed reference to nonexistent document
+
+### Earlier changes
+
 - **Contracts upgraded** to casper-contract v5 + casper-types v6 (Casper 2.x API)
   - `EntryPoint` → `EntityEntryPoint`, `EntryPointType::Called`, `EntryPointPayment::Caller`
   - `storage::new_contract` now takes `message_topics` parameter

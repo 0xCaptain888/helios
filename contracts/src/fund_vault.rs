@@ -54,7 +54,8 @@ pub extern "C" fn execute_rebalance() {
 pub extern "C" fn record_nav() {
     let nav_motes: u64 = runtime::get_named_arg("nav_motes");
     let yield_bps: u32 = runtime::get_named_arg("yield_bps");
-    let new_nav = nav_motes + (nav_motes as u128 * yield_bps as u128 / 10000) as u64;
+    let yield_amount = (nav_motes as u128 * yield_bps as u128 / 10000) as u64;
+    let new_nav = nav_motes.saturating_add(yield_amount);
     storage::write(get_uref("nav_motes"), new_nav);
 }
 
