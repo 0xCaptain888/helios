@@ -11,11 +11,11 @@ Built for the **Casper Agentic Buildathon 2026**.
 | Component | Status |
 |-----------|--------|
 | Smart Contracts (4x) | `#![no_std]` + casper-contract v5 + casper-types v6 — compiled to WASM with access control |
-| Deploy Script v3 | Pure Python, secp256k1 + ed25519, **all serialization verified against casper-client** |
+| Deploy Script v4 | Pure Python, secp256k1 (RFC 6979 raw sign) + ed25519, **invalid approval fix applied** |
 | WASM Binaries | OracleRegistry (74KB), DataMarket (76KB), FundVault (66KB), Governance (72KB) — **bulk-memory disabled** |
 | Testnet Wallets | 5x secp256k1 accounts (Account 2-5 funded) |
 | Testnet Deployment | **✅ ALL 4 CONTRACTS DEPLOYED** — wired and ready |
-| Security | Access control + DER→raw64 signature fix + CLType tags corrected + bulk-memory fix |
+| Security | Access control + secp256k1 raw RFC 6979 signing + CLType tags + bulk-memory fix |
 
 ---
 
@@ -116,7 +116,7 @@ python3 ../scripts/check_wasm_exports.py wasm/*.wasm
 
 ### Testnet deployment
 
-Pure Python deploy script — no `casper-client` or Rust toolchain needed. Supports both **secp256k1** (Casper Wallet) and **ed25519** keys.
+Pure Python deploy script — no `casper-client` or Rust toolchain needed. Supports both **secp256k1** (Casper Wallet) and **ed25519** keys. v4 uses raw RFC 6979 signing for secp256k1, matching Casper node verification exactly.
 
 ```bash
 # Check key info
@@ -150,7 +150,23 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 
 ## Recent changes (2026-06-20)
 
-### Testnet deployment complete + bulk-memory fix (latest)
+### v4 — secp256k1 raw signing fix + live dashboard (latest)
+
+**Root cause of `invalid approval`:**
+Casper node verifies secp256k1 signatures via `secp256k1::Message::from_digest_slice(&deploy_hash_bytes)` — raw 32-byte deploy hash, no re-hashing. v3 used `ECDSA(SHA256)` which signs `SHA256(deploy_hash)` → mismatch → `invalid approval`.
+
+**v4 fix:**
+- Replaced `ECDSA(SHA256)` with pure-Python RFC 6979 raw signing: `sign(deploy_hash_bytes)` directly
+- Verified: 20/20 random-message tests pass; 20/20 `ECDSA(SHA256)` tests correctly fail raw verify (proving v3 bug was real)
+- Removed `_der_to_raw64()` and `cryptography` ECDSA dependency entirely
+
+**Dashboard v4:**
+- `serve_dashboard.py` (new): testnet mode polls Casper RPC every 30s, reads `oracle_count`, `listing_count`, `nav_motes` from on-chain state, builds live `feed.json`
+- `app.js`: new `renderContracts()` shows 4 contract addresses linked to `cspr.live/contract/<hash>`; deploy hashes auto-generate `cspr.live/deploy/<hash>` links
+- `index.html`: new `contracts-bar` section (visible in testnet mode, hidden in mock)
+- `styles.css`: contract bar + oracle address link styling
+
+### Testnet deployment complete + bulk-memory fix
 
 **All 4 contracts deployed to Casper Testnet:**
 - OracleRegistry: `b8b714322159b3371b4d1fe15594589a7ded2c49648d19da28c0a4fe6fb8ab58`
@@ -166,11 +182,16 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 - Updated `scripts/check_wasm_exports.py` to detect bulk-memory instructions (0xFC 0x08-0x0B)
 - All 4 WASM binaries rebuilt and verified Casper-compatible
 
-**Deploy script v3 fixes:**
+**Deploy script v4 fixes (supersedes v3):**
+- **[CRITICAL]** secp256k1 signing: pure-Python RFC 6979 raw sign — no `ECDSA(SHA256)` wrapper
+- Removed `_der_to_raw64()` and `cryptography` ECDSA/SHA256 dependency for secp256k1
+- Verified: 20/20 raw sign tests pass; 20/20 ECDSA(SHA256) tests fail raw verify (proves v3 bug)
+
+**Deploy script v3 fixes (historical):**
 - Fixed `RuntimeArgs` serialization: removed incorrect outer `len_prefix` wrapper
 - Fixed timestamp precision: `_ms_to_iso()` now preserves milliseconds
 - Fixed CLType tags (U32=0x04, U64=0x05, U512=0x08, String=0x0a)
-- Fixed secp256k1 signature: DER → raw r‖s (64 bytes)
+- Fixed secp256k1 signature: DER → raw r‖s (64 bytes) — **superseded by v4 raw RFC 6979**
 - Fixed header_hash: uses PublicKey serialization, not account_hash
 
 ### Security & access control
@@ -219,7 +240,7 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 - **Contracts upgraded** to casper-contract v5 + casper-types v6 (Casper 2.x API)
   - `EntryPoint` → `EntityEntryPoint`, `EntryPointType::Called`, `EntryPointPayment::Caller`
   - `storage::new_contract` now takes `message_topics` parameter
-- **Deploy script rewritten** — pure Python, no `casper-client` binary needed
+- **Deploy script rewritten** — pure Python, no `casper-client` binary needed (now at v4 with raw secp256k1 signing)
   - Fixed CLType enum values (U32=0x04, U64=0x05, U512=0x08)
   - Added secp256k1 key support (Casper Wallet PEM files)
   - Fixed header_hash to use PublicKey serialization
