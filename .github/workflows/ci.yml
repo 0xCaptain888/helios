@@ -33,6 +33,6 @@ jobs:
       - name: Install dependencies
         run: pip install cryptography
       - name: Byte-compile all agent code
-        run: python -m compileall demo.py agents scripts/casper_deploy.py scripts/deploy_helios.py
+        run: python -m compileall demo.py agents scripts/casper_deploy.py scripts/serve_dashboard.py scripts/deploy_helios.py
       - name: Smoke-run the machine economy (3 rounds)
         run: python demo.py --rounds 3 --fast --no-serve

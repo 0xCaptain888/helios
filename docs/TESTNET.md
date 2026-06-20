@@ -81,3 +81,55 @@ may still be pending. Check:
 | `User(1)` OracleRegistry | Run --register first |
 | `User(20)` FundVault | weights_bps must sum to 10000 |
 | `User(34)` Governance | Wait 90s before calling finalize |
+
+---
+
+## v4 Update (2026-06-20)
+
+### Key Changes
+
+1. **Signing:** ECDSA(SHA256) verified working on Casper 2.x testnet
+2. **Dashboard:** New `serve_dashboard.py` for live on-chain data
+3. **Frontend:** Contract address bar with cspr.live links
+
+### Current Testnet State
+
+**Contracts (all verified):**
+- OracleRegistry: `b8b714322159b3371b4d1fe15594589a7ded2c49648d19da28c0a4fe6fb8ab58`
+- DataMarket: `f35fc379fc83f8ca8de3ac6e5c2d4db749a3433fd2536151b7f0332931c0ade4`
+- FundVault: `d9ee190f57aa142f28eaf4dea62231d72a0850e9e6e8332d3a0d3310fd188585`
+- Governance: `140b8183c7c170b8b2bee2a7d910ae6a9482029df2e12a049d64016a04c0e655`
+
+**Successful Operations:**
+- OracleRegistry.register (Beacon Rates v4): `7a42957045c8a52ea11af1a0df162633f51dea9000555637c976d8ce4341282d` - Block 8241868 - SUCCESS
+
+**Pending:**
+- All accounts need tokens from faucet (currently 0 CSPR)
+- Register remaining 3 oracles (Account 3/4/5)
+- List 3 feeds on DataMarket
+- Run full testnet_round.py test
+
+### Running the Dashboard
+
+```bash
+# Mock mode (local simulation)
+python3 scripts/serve_dashboard.py
+
+# Testnet mode (live on-chain data)
+HELIOS_MODE=testnet python3 scripts/serve_dashboard.py
+
+# Open http://127.0.0.1:8080
+```
+
+### v4 Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `Invalid Deploy` | Use casper_deploy.py v4 (ECDSA+SHA256 verified) |
+| `Invalid transaction` | Check account balance, use account_put_deploy |
+| Account balance 0 | Request tokens from https://testnet.cspr.live/tools/faucet |
+| Dashboard not showing contracts | Ensure testnet.env has all 4 contract hashes |
+
+---
+
+*v4 update · 2026-06-20*

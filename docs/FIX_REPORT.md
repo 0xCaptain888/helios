@@ -526,3 +526,86 @@ const fundAcct = keys["fund_agent"].publicKey.toAccountHashStr();
 ---
 
 *文档由 Helios Team 生成 · 2026-06-19*
+
+---
+
+## v4 更新 (2026-06-20)
+
+### 修复七：secp256k1 签名验证（v4 最终确认）
+
+**问题描述：**
+v3 的 secp256k1 签名实现使用 ECDSA(SHA256)，在 v4.md 文档中被认为可能导致 "invalid approval" 错误。文档建议使用纯 Python RFC 6979 直接对 deploy_hash 原始字节签名。
+
+**调查过程：**
+1. 按照 v4.md 建议实现了纯 Python RFC 6979 签名
+2. 测试发现节点返回 "Invalid transaction" 错误
+3. 通过对比链上成功的 Helios deploy（`33eb3c8b...`）发现：
+   - 成功 deploy 使用 ECDSA(SHA256) 签名
+   - 节点内部对 deploy_hash 做 SHA-256 后再验签
+   - DER→raw r‖s (64 bytes) 转换正确
+
+**最终确认：**
+- ✅ ECDSA(SHA256) 签名方式正确
+- ✅ 节点接受并执行 deploy
+- ✅ Deploy hash: `7a42957045c8a52ea11af1a0df162633f51dea9000555637c976d8ce4341282d`
+- ✅ Block: 8241868
+- ✅ 状态: SUCCESS
+
+**代码变更：**
+```python
+# scripts/casper_deploy.py - CasperKey.sign()
+def sign(self, deploy_hash_bytes):
+    """Sign and return raw bytes. secp256k1: ECDSA(SHA256) → DER → raw r||s (64 bytes)."""
+    if self._tag == 1:
+        return self._priv.sign(deploy_hash_bytes)
+    der = self._priv.sign(deploy_hash_bytes, ECDSA(SHA256()))
+    return _der_to_raw64(der)
+```
+
+**结论：**
+v3 的签名实现是正确的。v4.md 文档中的假设（需要 raw RFC 6979）是错误的。Casper 节点在验签时会对 deploy_hash 做 SHA-256 处理，因此使用 ECDSA(SHA256) 是正确的做法。
+
+### v4 新增功能
+
+1. **serve_dashboard.py** - 实时 dashboard 服务
+   - testnet 模式每 30s 轮询链上状态
+   - 读取 oracle_count, listing_count, nav_motes
+   - 构建实时 feed.json
+
+2. **前端 contracts-bar** - 合约地址栏
+   - 显示 4 个合约地址
+   - 链接到 cspr.live/contract/<hash>
+   - testnet 模式自动显示
+
+3. **app.js v4** - 前端逻辑更新
+   - renderContracts() 函数
+   - deploy hash 自动生成 cspr.live 链接
+   - oracle 地址链接到 cspr.live/account/<hash>
+
+### 当前状态
+
+**已完成：**
+- ✅ v4 代码升级
+- ✅ secp256k1 签名验证
+- ✅ 成功执行 OracleRegistry.register
+- ✅ 4 个合约验证存在
+- ✅ Mock demo 运行成功（6 轮，18 次 x402 支付）
+- ✅ README 实时更新
+
+**待完成：**
+- ⚠️ 所有账户余额为 0（需要重新从 faucet 获取测试币）
+- ⚠️ 注册剩余 3 个 oracle（Account 3/4/5）
+- ⚠️ List 3 个 feed 到 DataMarket
+- ⚠️ 运行完整 testnet_round.py 测试
+- ⚠️ 更新 docs/TESTNET.md
+
+### 测试网状态
+
+- **节点:** ✅ 连通 (API 2.0.0, chain: casper-test)
+- **最新区块:** 8,241,878+
+- **合约:** ✅ 4 个合约已部署并验证
+- **账户余额:** ❌ 所有账户 0 CSPR（需要 faucet）
+
+---
+
+*v4 更新由 Helios Team 生成 · 2026-06-20*

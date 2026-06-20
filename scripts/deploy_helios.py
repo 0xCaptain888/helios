@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 """
+#!/usr/bin/env python3
+"""
+DEPRECATED: Use casper_deploy.py deploy-all instead.
+
+This script is kept for reference but is no longer maintained.
+For new deployments, use:
+
+    python3 scripts/casper_deploy.py deploy-all --key keys/Account_2_secret_key.pem
+
+---
+
+Helios full deployment pipeline — pure Python, no casper-client needed.
 Helios full deployment pipeline — pure Python, no casper-client needed.
 
 Steps:
