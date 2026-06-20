@@ -1,13 +1,16 @@
 #![no_std]
-#![no_main]
 
 extern crate alloc;
 
 use core::panic::PanicInfo;
 
+// no_std requires an explicit global allocator for wasm32-unknown-unknown
+#[cfg(not(test))]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+// no_std requires an explicit panic handler
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
