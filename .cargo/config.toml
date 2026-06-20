@@ -2,4 +2,4 @@
 target = "wasm32-unknown-unknown"
 
 [target.wasm32-unknown-unknown]
-rustflags = ["-C", "link-arg=--allow-undefined"]
+rustflags = ["-C", "link-arg=--allow-undefined", "-C", "target-feature=-bulk-memory,-reference-types,-sign-ext"]

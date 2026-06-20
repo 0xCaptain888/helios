@@ -28,8 +28,8 @@ build_one() {
   local feature="$1"
   local outname="$2"
   echo "-- building $outname (--features $feature)"
-  # Use cargo config for --allow-undefined (Casper host imports)
-  cargo build \
+  # Disable bulk-memory and reference-types for Casper VM compatibility
+  RUSTFLAGS="-C link-arg=--allow-undefined -C target-feature=-bulk-memory,-reference-types,-sign-ext" cargo build \
     --release \
     --manifest-path "$CONTRACTS/Cargo.toml" \
     --target wasm32-unknown-unknown \

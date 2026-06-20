@@ -43,7 +43,7 @@ const WASM_DIR = path.join(ROOT, "contracts", "wasm");
 const KEYS_DIR = path.join(ROOT, "keys");
 const AGENTS   = path.join(ROOT, "agents");
 
-const NODE_URL  = process.env.CASPER_NODE || "https://node.testnet.casper.network/rpc";
+const NODE_URL  = process.env.CASPER_NODE || "https://rpc.testnet.cspr.cloud/rpc";
 const CHAIN     = "casper-test";
 const EXPLORER  = "https://testnet.cspr.live";
 const GAS_INSTALL = "400000000000";   // 400 CSPR for wasm install
@@ -53,17 +53,13 @@ const GAS_CALL    = "5000000000";     // 5 CSPR for entry-point call
 
 function loadKey(keyPath) {
   const { Keys } = sdk();
-  try {
-    return Keys.Secp256K1.loadKeyPairFromPrivateFile(keyPath);
-  } catch {
-    return Keys.Ed25519.loadKeyPairFromPrivateFile(keyPath);
-  }
+  return Keys.Ed25519.loadKeyPairFromPrivateFile(keyPath);
 }
 
 function keygen(outDir) {
   const { Keys } = sdk();
   fs.mkdirSync(outDir, { recursive: true });
-  const kp = Keys.Secp256K1.new();
+  const kp = Keys.Ed25519.new();
   const secretPath = path.join(outDir, "secret_key.pem");
   const pubPath    = path.join(outDir, "public_key.pem");
   const hexPath    = path.join(outDir, "public_key_hex");

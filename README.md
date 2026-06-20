@@ -69,7 +69,7 @@ Full details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Smart contracts
 
-**Status**: Contracts successfully built and ready for deployment (casper-contract v5 / casper-types v6 / no_std).
+**Status**: Contracts compiled successfully (casper-contract v5 / casper-types v6 / no_std).
 
 ```bash
 # Build all four contracts to WASM
@@ -85,25 +85,35 @@ bash scripts/build_contracts.sh
 ### Contract versions
 - `casper-contract` v5.1.1
 - `casper-types` v6.1.0
-- `wee_alloc` for no_std heap allocation
+- Custom bump allocator (avoids bulk memory operations for Casper VM compatibility)
 - All contracts use `#![no_std]` with `EntityEntryPoint` API (Casper 2.x compatible)
+- Build flags: `-C link-arg=--allow-undefined -C target-feature=-bulk-memory,-reference-types,-sign-ext`
+
+### Known issues
+- Casper VM does not support WASM bulk memory operations (memory.copy, memory.fill)
+- Default Rust compiler generates these operations even with `-C target-feature=-bulk-memory`
+- Solution: Custom bump allocator in `lib.rs` replaces `wee_alloc` to avoid bulk memory ops
+- Alternative: Use `wasm-opt --disable-bulk-memory` post-processing (may not remove all ops)
 
 ### Deployment to Casper Testnet
 
 See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full deployment guide.
 
 ```bash
-# Install dependencies
-npm install casper-js-sdk
+# Install casper-client CLI
+cargo install casper-client
 
-# Deploy all contracts
-node scripts/deploy_helios.js deploy-all
-
-# Or deploy manually
-node scripts/deploy_helios.js install --key keys/fund_agent/secret_key.pem --wasm contracts/wasm/OracleRegistry.wasm
+# Deploy OracleRegistry
+casper-client put-deploy \
+  --node-address https://node.testnet.casper.network \
+  --secret-key keys/fund_agent/secret_key.pem \
+  --chain-name casper-test \
+  --payment-amount 400000000000 \
+  --session-path contracts/wasm/OracleRegistry.wasm \
+  --ttl 30min
 ```
 
-**Testnet Node**: https://node.testnet.casper.network/rpc  
+**Testnet Node**: https://node.testnet.casper.network  
 **Explorer**: https://testnet.cspr.live
 
 ### Current deployment status
@@ -111,9 +121,11 @@ node scripts/deploy_helios.js install --key keys/fund_agent/secret_key.pem --was
 - ✅ Contracts compile successfully with casper-contract v5 / casper-types v6
 - ✅ All WASM exports verified (call + entry points + memory section)
 - ✅ Wallet keys configured (5 accounts, all funded with test CSPR)
-- 🔄 Deployment in progress
+- ✅ `casper-client` v5.0.1 installed and working
+- ⚠️ WASM bulk memory operations issue - custom bump allocator implemented
+- 🔄 Testing deployment with optimized WASM
 
-**Account balances** (as of 2026-06-19):
+**Account balances** (as of 2026-06-20):
 - oracle_tbill: 1100 CSPR
 - oracle_gold: 5000 CSPR
 - oracle_reindex: 5000 CSPR
