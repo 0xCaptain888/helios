@@ -88,8 +88,8 @@ pub extern "C" fn register() {
 
 #[no_mangle]
 pub extern "C" fn post_attestation() {
-    let _feed_key: String = runtime::get_named_arg("feed_key");
-    let _value: String = runtime::get_named_arg("value");
+    let feed_key: String = runtime::get_named_arg("feed_key");
+    let value: String = runtime::get_named_arg("value");
     let caller = runtime::get_caller().to_string();
     let rep_key = alloc::format!("rep:{}", caller);
     let rep_uref = match runtime::get_key(&rep_key) {
@@ -99,11 +99,22 @@ pub extern "C" fn post_attestation() {
     let (sett, attest, acc, disp, _) = decode_rep(&read_str(rep_uref));
     let score = compute_score(sett, acc, disp);
     write_str(rep_uref, encode_rep(sett, attest + 1, acc, disp, score));
+    // Store attestation data
+    let attest_key = alloc::format!("attest:{}:{}:{}", caller, feed_key, attest + 1);
+    let attest_data = alloc::format!("{}|{}", feed_key, value);
+    runtime::put_key(&attest_key, storage::new_uref(attest_data).into());
 }
 
 #[no_mangle]
 pub extern "C" fn credit_settlement() {
     let oracle: String = runtime::get_named_arg("oracle");
+    // Access control: only admin or market contract can credit settlements
+    let caller = runtime::get_caller().to_string();
+    let admin = read_str(get_uref("admin"));
+    let market = read_str(get_uref("market"));
+    if caller != admin && caller != market {
+        runtime::revert(casper_types::ApiError::User(2)); // NotAuthorized
+    }
     let rep_key = alloc::format!("rep:{}", oracle);
     let rep_uref = match runtime::get_key(&rep_key) {
         Some(k) => k.into_uref().unwrap_or_revert(),
@@ -118,6 +129,12 @@ pub extern "C" fn credit_settlement() {
 pub extern "C" fn score_attestation() {
     let oracle: String = runtime::get_named_arg("oracle");
     let accurate: bool = runtime::get_named_arg("accurate");
+    // Access control: only admin can score attestations
+    let caller = runtime::get_caller().to_string();
+    let admin = read_str(get_uref("admin"));
+    if caller != admin {
+        runtime::revert(casper_types::ApiError::User(2)); // NotAuthorized
+    }
     let rep_key = alloc::format!("rep:{}", oracle);
     let rep_uref = match runtime::get_key(&rep_key) {
         Some(k) => k.into_uref().unwrap_or_revert(),
@@ -132,6 +149,12 @@ pub extern "C" fn score_attestation() {
 #[no_mangle]
 pub extern "C" fn set_market() {
     let market: String = runtime::get_named_arg("market");
+    // Access control: only admin can set market
+    let caller = runtime::get_caller().to_string();
+    let admin = read_str(get_uref("admin"));
+    if caller != admin {
+        runtime::revert(casper_types::ApiError::User(2)); // NotAuthorized
+    }
     let market_uref = match runtime::get_key("market") {
         Some(k) => k.into_uref().unwrap_or_revert(),
         None => { let u = storage::new_uref(String::new()); runtime::put_key("market", u.into()); u }

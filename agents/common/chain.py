@@ -538,6 +538,17 @@ class TestnetChain:
             listing = self.state["market"]["listings"][listing_id]
             listing["sales"] += 1
             listing["revenue_motes"] += amount_motes
+            # Credit settlement to oracle reputation (mirrors MockChain behavior)
+            oracle_addr = listing["oracle"]
+            oracle = self.state["registry"]["oracles"].get(oracle_addr)
+            if oracle:
+                rep = oracle["reputation"]
+                rep["settlements"] += 1
+                scored = rep["accurate"] + rep["disputed"]
+                accuracy = 5000 if scored == 0 else rep["accurate"] * 10_000 // scored
+                activity = min(rep["settlements"], 100)
+                weight = 2_000 + (10_000 - 2_000) * activity // 100
+                rep["score_bps"] = accuracy * weight // 10_000
         return deploy_hash
 
     # ---------- FundVault ----------
@@ -545,11 +556,19 @@ class TestnetChain:
         with _LOCK:
             self.state["vault"]["operator"] = operator
 
-    def vault_deposit(self, caller: str, amount: int) -> str:
+    def vault_deposit(self, caller_key: str, amount: int) -> str:
+        deploy_hash = self._call(
+            caller_key,
+            self.contracts["vault"],
+            "deposit",
+            [
+                self._arg_u64("amount", amount),
+            ],
+        )
         with _LOCK:
-            self.state["accounts"][caller]["balance"] -= amount
+            self.state["accounts"][caller_key]["balance"] -= amount
             self.state["vault"]["deposits"] += amount
-        return self._record_deploy("vault.deposit", caller, {"amount": amount})
+        return deploy_hash
 
     def execute_rebalance(
         self,

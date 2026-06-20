@@ -130,8 +130,8 @@ def main() -> int:
         summary = f"Testnet round {round_no}: CSPR 15% TBILL 40% XAU 25% RE 20%"
         proposal_id, tx = chain.gov_submit(chain.keys["fund_agent"], summary, payload)
         show("gov.submit", tx, chain)
-        print("  waiting out the veto window (65s)...")
-        time.sleep(65)
+        print("  waiting out the veto window (95s)...")
+        time.sleep(95)
         tx = chain.gov_finalize(chain.keys["fund_agent"], proposal_id)
         show("gov.finalize", tx, chain)
         tx = chain.execute_rebalance(

@@ -47,6 +47,12 @@ pub extern "C" fn call() {
 #[no_mangle]
 pub extern "C" fn propose() {
     let description: String = runtime::get_named_arg("description");
+    // Access control: only proposer can create proposals
+    let caller = runtime::get_caller();
+    let stored_proposer = read_str(get_uref("proposer"));
+    if caller.to_string() != stored_proposer {
+        runtime::revert(casper_types::ApiError::User(35)); // NotAuthorized
+    }
     let count_uref = get_uref("proposal_count");
     let id = read_u64(count_uref);
     let now_ms: u64 = runtime::get_blocktime().into();
@@ -59,6 +65,12 @@ pub extern "C" fn propose() {
 #[no_mangle]
 pub extern "C" fn veto() {
     let proposal_id: u64 = runtime::get_named_arg("proposal_id");
+    // Access control: only risk_agent can veto
+    let caller = runtime::get_caller();
+    let stored_risk_agent = read_str(get_uref("risk_agent"));
+    if caller.to_string() != stored_risk_agent {
+        runtime::revert(casper_types::ApiError::User(35)); // NotAuthorized
+    }
     let key = alloc::format!("proposal:{}", proposal_id);
     let prop_uref = runtime::get_key(&key).unwrap_or_revert().into_uref().unwrap_or_revert();
     let rec = read_str(prop_uref);

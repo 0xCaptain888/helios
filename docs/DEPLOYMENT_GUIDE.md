@@ -75,7 +75,11 @@ helios_fixed.zip 解压内容 → helios/contracts/
 
 ## 2. 密钥说明
 
-### 2.1 Casper Wallet 密钥格式
+### 2.1 两种密钥来源
+
+Helios 支持两种密钥来源：
+
+**方式 A：Casper Wallet 导出的密钥**（如果你有的话）
 
 你的 5 个密钥文件（`Account 1~5_secret_key.pem`）全部是 **secp256k1** 格式：
 
@@ -87,13 +91,32 @@ MHQCAQEEICrBYtViY894hv2u...oAcGBSuBBAAK
 
 `casper_deploy.py` 已完整支持 secp256k1，**直接使用这些文件即可**，无需转换。
 
+**方式 B：使用 keygen 生成的密钥**（推荐用于 agent 系统）
+
+```bash
+python3 scripts/casper_deploy.py keygen --out keys/
+```
+
+这会生成 5 个 agent 密钥：
+- `keys/oracle_tbill/secret_key.pem`
+- `keys/oracle_gold/secret_key.pem`
+- `keys/oracle_reindex/secret_key.pem`
+- `keys/fund_agent/secret_key.pem`
+- `keys/risk_agent/secret_key.pem`
+
 ### 2.2 查看密钥信息
 
+**Casper Wallet 密钥：**
 ```bash
 python3 scripts/casper_deploy.py pubkey --key "Account 1_secret_key.pem"
 ```
 
-输出：
+**生成的密钥：**
+```bash
+python3 scripts/casper_deploy.py pubkey --key keys/fund_agent/secret_key.pem
+```
+
+输出示例：
 
 ```
 key_type:     secp256k1
@@ -222,9 +245,16 @@ https://testnet.cspr.live/account/<account-hash>
 
 ### 5.1 方式 A：一键自动部署（推荐）
 
+**使用 Casper Wallet 密钥：**
 ```bash
 python3 scripts/casper_deploy.py deploy-all \
     --key "Account 1_secret_key.pem"
+```
+
+**使用生成的密钥：**
+```bash
+python3 scripts/casper_deploy.py deploy-all \
+    --key keys/fund_agent/secret_key.pem
 ```
 
 脚本自动完成全部步骤，按回车确认充值后全程无需干预：
@@ -271,8 +301,15 @@ DEPLOYER_ACCOUNT=account-hash-<hex>
 **步骤 1：部署 OracleRegistry**
 
 ```bash
+# 使用 Casper Wallet 密钥
 python3 scripts/casper_deploy.py install \
     --key "Account 1_secret_key.pem" \
+    --wasm contracts/wasm/OracleRegistry.wasm \
+    --wait
+
+# 或使用生成的密钥
+python3 scripts/casper_deploy.py install \
+    --key keys/fund_agent/secret_key.pem \
     --wasm contracts/wasm/OracleRegistry.wasm \
     --wait
 

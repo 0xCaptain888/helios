@@ -143,7 +143,7 @@ class CasperKey:
             return self._raw.sign(data)
         else:
             # secp256k1: ECDSA with SHA-256, convert DER → raw r||s (64 bytes)
-            der_sig = self._raw.sign(data, ec.ECDSA(hashes.SHA256()))
+            der_sig = self._raw.sign(data, ECDSA(hashes.SHA256()))
             return self._der_to_raw64(der_sig)
 
     def sign_deploy(self, header_hash_bytes: bytes) -> bytes:
@@ -668,41 +668,55 @@ def _extract_contract_hash(deploy_hash: str, node: str) -> str:
     try:
         r = wait_for_deploy(deploy_hash, node=node)
         txn = r.get("transaction") or r.get("deploy") or {}
-        # Try execution results
-        results = txn.get("execution_results") or txn.get("execution_info", {}).get(
-            "results", {}
-        )
-        if isinstance(results, list) and results:
-            transforms = (
-                results[0].get("result", {}).get("Success", {}).get("effects", [])
-            )
-            for effect in transforms:
-                if "Write" in str(effect):
-                    # Look for contract hash in transforms
-                    pass
-        # Fallback: query the account's named keys
-        # For now, return the deploy hash as placeholder
-        # The actual contract hash needs to be extracted from the deploy result
-    except Exception:
-        pass
-    # Try to get from state query
-    try:
-        r = _rpc(
-            "info_get_transaction", {"transaction_hash": {"Deploy": deploy_hash}}, node
-        )
-        txn = r.get("transaction") or r.get("deploy") or {}
-        results = txn.get("execution_info", {}).get("results", [])
+
+        # Casper 2.x: execution_info.results[].result.Success.effects[]
+        exec_info = txn.get("execution_info", {})
+        results = exec_info.get("results", [])
+
         if results:
             effects = results[0].get("result", {}).get("Success", {}).get("effects", [])
-            for eff in effects:
-                transform = eff.get("transform", {})
-                if "WriteContractPackage" in transform or "WriteContract" in transform:
-                    key = eff.get("key", "")
-                    if key.startswith("contract-"):
+            for effect in effects:
+                transform = effect.get("transform", {})
+                # Look for WriteContract or WriteContractPackage
+                if "WriteContractPackage" in transform:
+                    key = effect.get("key", "")
+                    if key.startswith("contract-package-wasm"):
+                        # The actual contract hash is in a subsequent WriteContract effect
+                        continue
+                if "WriteContract" in transform or "Write" in str(transform):
+                    key = effect.get("key", "")
+                    if key.startswith("contract-") and not key.startswith(
+                        "contract-package"
+                    ):
                         return key.replace("contract-", "")
-    except Exception:
-        pass
-    return deploy_hash  # Fallback
+
+        # Casper 1.x fallback: execution_results[].result.Success.effect.transforms[]
+        exec_results = txn.get("execution_results", [])
+        if exec_results:
+            transforms = (
+                exec_results[0]
+                .get("result", {})
+                .get("Success", {})
+                .get("effect", {})
+                .get("transforms", [])
+            )
+            for transform in transforms:
+                for t in transform:
+                    if "WriteContract" in t or "Write" in str(t):
+                        key = t.get("key", "")
+                        if key.startswith("contract-") and not key.startswith(
+                            "contract-package"
+                        ):
+                            return key.replace("contract-", "")
+
+        print(f"  ⚠ Could not auto-extract contract hash from deploy {deploy_hash}")
+        print(
+            f"    Please check {EXPLORER}/deploy/{deploy_hash} and manually extract the contract hash"
+        )
+    except Exception as e:
+        print(f"  ⚠ Error extracting contract hash: {e}")
+
+    return deploy_hash  # Fallback - caller should handle this
 
 
 def main() -> None:

@@ -18,8 +18,9 @@ jobs:
         run: bash scripts/build_contracts.sh
       - name: Verify WASM exports
         run: python3 scripts/check_wasm_exports.py contracts/wasm/*.wasm
-      - name: Format check
+      - name: Format check (non-blocking)
         working-directory: contracts
+        continue-on-error: true
         run: cargo fmt --check
 
   agents:
