@@ -126,9 +126,25 @@ Full deployment guide: [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md)
 | Mode | Switch | What happens |
 |---|---|---|
 | `mock` (default) | — | Local deterministic ledger mirrors the contracts so the whole economy runs offline; every action gets a pseudo deploy hash |
-| `testnet` | `HELIOS_MODE=testnet` + `agents/testnet.env` | Writes go through `casper-client` to the deployed contracts on Casper Testnet; receipts link to testnet.cspr.live |
+| `testnet` | `HELIOS_MODE=testnet` + `agents/testnet.env` | Writes go through `casper_deploy.py` (pure Python) to the deployed contracts on Casper Testnet; receipts link to testnet.cspr.live |
 
 Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write its allocation rationales with Claude.
+
+## Recent changes (2026-06-20)
+
+- **Contracts upgraded** to casper-contract v5 + casper-types v6 (Casper 2.x API)
+  - `EntryPoint` → `EntityEntryPoint`, `EntryPointType::Called`, `EntryPointPayment::Caller`
+  - `storage::new_contract` now takes `message_topics` parameter
+- **Deploy script rewritten** — pure Python, no `casper-client` binary needed
+  - Fixed CLType enum values (U32=0x04, U64=0x05, U512=0x08)
+  - Added secp256k1 key support (Casper Wallet PEM files)
+  - Fixed header_hash to use PublicKey serialization
+  - Added `deploy-all` command for one-click 4-contract deployment
+- **Cleaned up** all Odra-related files and stale deploy scripts
+- **CI updated** to use plain `cargo test` + `cargo build` (no cargo-odra)
+- All 4 WASM contracts compile and are ready for testnet deployment
+
+Full fix details: [`docs/FIX_REPORT.md`](docs/FIX_REPORT.md)
 
 ## x402 in one breath
 
