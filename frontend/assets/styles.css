@@ -270,3 +270,24 @@ a:focus-visible, .tape:focus-visible {
   .topbar { flex-direction: column; gap: 8px; align-items: flex-start; }
   .tagline { display: none; }
 }
+
+/* ── Contract address bar (testnet mode) ─────────────────────────────────── */
+.contracts-bar {
+  background: var(--base, #E9EDF2);
+  border-bottom: 1px solid var(--line, #C9D3DE);
+  padding: 0.5rem 1.2rem;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  font-size: 0.8rem;
+}
+.contracts-label {
+  color: var(--dim, #5E6D7E); font-weight: 700;
+  letter-spacing: 0.08em; font-size: 0.7rem; white-space: nowrap;
+}
+#contract-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.contract-item { display: flex; flex-direction: column; gap: 0.1rem; }
+.contract-name { color: var(--dim, #5E6D7E); font-size: 0.65rem; text-transform: uppercase; }
+.contract-addr { color: var(--amber, #C77F1F); text-decoration: none; font-size: 0.75rem; }
+.contract-addr:hover { text-decoration: underline; }
+.oracle-addr { color: var(--dim, #5E6D7E); text-decoration: none; font-size: 0.72rem; margin-left: 0.4rem; }
+.oracle-addr:hover { color: var(--amber, #C77F1F); }
+.dim { opacity: 0.4; }
