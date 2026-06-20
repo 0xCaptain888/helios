@@ -11,11 +11,28 @@ Built for the **Casper Agentic Buildathon 2026**.
 | Component | Status |
 |-----------|--------|
 | Smart Contracts (4x) | `#![no_std]` + casper-contract v5 + casper-types v6 — compiled to WASM with access control |
-| Deploy Script | Pure Python, secp256k1 + ed25519 support, all serialization bugs fixed |
-| WASM Binaries | OracleRegistry (67KB), DataMarket (69KB), FundVault (60KB), Governance (65KB) |
-| Testnet Wallets | 5x secp256k1 accounts ready (Account 2-5 funded) |
-| Testnet Deployment | **In progress** — deploying to Casper Testnet |
-| Security | Access control added to governance, oracle registry, and market contracts |
+| Deploy Script v3 | Pure Python, secp256k1 + ed25519, **all serialization verified against casper-client** |
+| WASM Binaries | OracleRegistry (74KB), DataMarket (76KB), FundVault (66KB), Governance (72KB) — **bulk-memory disabled** |
+| Testnet Wallets | 5x secp256k1 accounts (Account 2-5 funded) |
+| Testnet Deployment | **✅ ALL 4 CONTRACTS DEPLOYED** — wired and ready |
+| Security | Access control + DER→raw64 signature fix + CLType tags corrected + bulk-memory fix |
+
+---
+
+## Casper Testnet Deployment
+
+**All 4 contracts deployed and wired on Casper Testnet:**
+
+| Contract | Deploy Hash | Contract Hash | Explorer |
+|----------|-------------|---------------|----------|
+| OracleRegistry | `6e9d0107…` | `b8b714322159b3371b4d1fe15594589a7ded2c49648d19da28c0a4fe6fb8ab58` | [View](https://testnet.cspr.live/contract/b8b714322159b3371b4d1fe15594589a7ded2c49648d19da28c0a4fe6fb8ab58) |
+| DataMarket | `32812754…` | `f35fc379fc83f8ca8de3ac6e5c2d4db749a3433fd2536151b7f0332931c0ade4` | [View](https://testnet.cspr.live/contract/f35fc379fc83f8ca8de3ac6e5c2d4db749a3433fd2536151b7f0332931c0ade4) |
+| FundVault | `6398680e…` | `d9ee190f57aa142f28eaf4dea62231d72a0850e9e6e8332d3a0d3310fd188585` | [View](https://testnet.cspr.live/contract/d9ee190f57aa142f28eaf4dea62231d72a0850e9e6e8332d3a0d3310fd188585) |
+| Governance | `01ae6d58…` | `140b8183c7c170b8b2bee2a7d910ae6a9482029df2e12a049d64016a04c0e655` | [View](https://testnet.cspr.live/contract/140b8183c7c170b8b2bee2a7d910ae6a9482029df2e12a049d64016a04c0e655) |
+
+**Wiring transactions:**
+- OracleRegistry.set_market: `33eb3c8b61dbc83b46413013a2fe5e8b0f72a43d53176206df90f5845a69620b`
+- FundVault.set_governance: `038bcb0d8d690f40f7704239ed0828606ca25a4ab8f85437ffed8431dc390e6a`
 
 ---
 
@@ -133,18 +150,28 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 
 ## Recent changes (2026-06-20)
 
-### Deploy script critical fixes (latest)
+### Testnet deployment complete + bulk-memory fix (latest)
 
-**Fixed body hash and deploy hash computation:**
-- Fixed `RuntimeArgs` serialization: removed incorrect outer `len_prefix` wrapper (was causing "invalid body hash" errors)
-- Fixed timestamp precision: `_ms_to_iso()` now preserves milliseconds instead of truncating to `.000Z` (was causing "invalid deploy hash" errors)
-- Reordered RPC nodes: `node.testnet.casper.network` is now primary (more reliable than `rpc.testnet.cspr.cloud`)
+**All 4 contracts deployed to Casper Testnet:**
+- OracleRegistry: `b8b714322159b3371b4d1fe15594589a7ded2c49648d19da28c0a4fe6fb8ab58`
+- DataMarket: `f35fc379fc83f8ca8de3ac6e5c2d4db749a3433fd2536151b7f0332931c0ade4`
+- FundVault: `d9ee190f57aa142f28eaf4dea62231d72a0850e9e6e8332d3a0d3310fd188585`
+- Governance: `140b8183c7c170b8b2bee2a7d910ae6a9482029df2e12a049d64016a04c0e655`
+- Wiring: OracleRegistry.set_market + FundVault.set_governance completed
 
-**Testnet deployment status:**
-- All 4 WASM contracts compiled successfully with feature flags
-- 3-layer pre-deploy checks pass (call export, memory section, entry points)
-- OracleRegistry deployment submitted to testnet
-- Using `casper-client` CLI for reliable deployment (Python script still being debugged for signature verification)
+**Bulk-memory WASM fix:**
+- Fixed "Wasm preprocessing error: Bulk memory operations are not supported"
+- Added `contracts/.cargo/config.toml` with `-C target-feature=-bulk-memory,-bulk-memory-opt,-reference-types`
+- Updated `scripts/build_contracts.sh` to set RUSTFLAGS explicitly
+- Updated `scripts/check_wasm_exports.py` to detect bulk-memory instructions (0xFC 0x08-0x0B)
+- All 4 WASM binaries rebuilt and verified Casper-compatible
+
+**Deploy script v3 fixes:**
+- Fixed `RuntimeArgs` serialization: removed incorrect outer `len_prefix` wrapper
+- Fixed timestamp precision: `_ms_to_iso()` now preserves milliseconds
+- Fixed CLType tags (U32=0x04, U64=0x05, U512=0x08, String=0x0a)
+- Fixed secp256k1 signature: DER → raw r‖s (64 bytes)
+- Fixed header_hash: uses PublicKey serialization, not account_hash
 
 ### Security & access control
 

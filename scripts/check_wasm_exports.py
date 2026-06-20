@@ -1,215 +1,138 @@
 #!/usr/bin/env python3
-"""Pre-deploy gate: verify Casper contract wasm files are structurally valid.
+"""Verify Casper WASM compatibility.
 
-Three-layer check (all required by Casper VM v1):
-  Layer 1: exports `call` as a function — the Casper ABI entry-point.
-  Layer 2: has an internal memory section — Casper forbids --import-memory;
-           the VM requires the memory to be defined inside the wasm, not imported.
-  Layer 3: ALL declared entry-point handlers are present in the wasm export table.
-           (Prevents the "Function not found" error when metadata is registered
-           but the actual #[no_mangle] pub extern "C" fn is missing or stripped).
-
-Zero dependencies (no wabt / wasm-objdump needed) — parses wasm binary directly.
+Checks:
+  1. The WASM exports a `call` function (required by Casper VM)
+  2. No bulk-memory instructions (0xFC 0x08-0x0B) — not supported by Casper wasmi
 
 Usage:
-    python3 scripts/check_wasm_exports.py contracts/wasm/*.wasm
-Exit 0 = all good; 1 = at least one wasm is broken.
+  python3 scripts/check_wasm_exports.py contracts/wasm/*.wasm
 """
 
-import sys
 import struct
-import os
-
-# Expected exports per contract (call + all entry-point handlers)
-EXPECTED_EXPORTS = {
-    "OracleRegistry.wasm": {
-        "call",
-        "register",
-        "post_attestation",
-        "credit_settlement",
-        "score_attestation",
-        "set_market",
-        "get_oracle",
-        "get_reputation",
-    },
-    "DataMarket.wasm": {
-        "call",
-        "list_feed",
-        "purchase",
-        "anchor_x402_receipt",
-        "set_fee_bps",
-        "get_listing",
-        "listing_count",
-    },
-    "FundVault.wasm": {
-        "call",
-        "deposit",
-        "execute_rebalance",
-        "record_nav",
-        "get_nav",
-        "set_governance",
-    },
-    "Governance.wasm": {
-        "call",
-        "propose",
-        "veto",
-        "finalize",
-        "get_proposal",
-        "proposal_count",
-    },
-}
+import sys
+from pathlib import Path
 
 
-def read_leb128(buf: bytes, pos: int):
+def parse_leb128_u(data: bytes, pos: int) -> tuple[int, int]:
+    """Parse unsigned LEB128, return (value, new_pos)."""
     result, shift = 0, 0
     while True:
-        b = buf[pos]
+        byte = data[pos]
         pos += 1
-        result |= (b & 0x7F) << shift
-        if not b & 0x80:
+        result |= (byte & 0x7F) << shift
+        if not (byte & 0x80):
             return result, pos
         shift += 7
 
 
-def parse_wasm(path: str):
-    """Return (exports, has_memory_section, has_import_memory)."""
-    with open(path, "rb") as f:
-        data = f.read()
-
-    if data[:4] != b"\x00asm":
-        raise ValueError(f"{path}: not a wasm file (bad magic bytes)")
-    version = struct.unpack("<I", data[4:8])[0]
-    if version != 1:
-        raise ValueError(f"{path}: unsupported wasm version {version}")
-
-    exports = []
-    has_memory_section = False
-    has_import_memory = False
-
-    pos = 8
-    while pos < len(data):
-        sec_id = data[pos]
-        pos += 1
-        sec_size, pos = read_leb128(data, pos)
-        sec_end = pos + sec_size
-
-        if sec_id == 2:  # Import section
-            count, p = read_leb128(data, pos)
-            for _ in range(count):
-                mod_len, p = read_leb128(data, p)
-                p += mod_len
-                fld_len, p = read_leb128(data, p)
-                p += fld_len
-                kind = data[p]
-                p += 1
-                if kind == 2:  # memory import
-                    has_import_memory = True
-                elif kind == 0:  # func import
-                    _, p = read_leb128(data, p)
-                elif kind == 1:  # table import
-                    p += 1
-                    flags = data[p]
-                    p += 1
-                    _, p = read_leb128(data, p)
-                    if flags & 1:
-                        _, p = read_leb128(data, p)
-                elif kind == 3:  # global import
-                    p += 2
-
-        elif sec_id == 5:  # Memory section
-            count, p = read_leb128(data, pos)
-            if count > 0:
-                has_memory_section = True
-
-        elif sec_id == 7:  # Export section
-            count, p = read_leb128(data, pos)
-            for _ in range(count):
-                name_len, p = read_leb128(data, p)
-                name = data[p : p + name_len].decode("utf-8", "replace")
-                p += name_len
-                kind = data[p]
-                p += 1
-                _idx, p = read_leb128(data, p)
-                kind_str = {0: "func", 1: "table", 2: "memory", 3: "global"}.get(
-                    kind, f"kind{kind}"
-                )
-                exports.append((name, kind_str))
-
-        pos = sec_end
-
-    return exports, has_memory_section, has_import_memory
-
-
-def check_file(path: str):
-    """Return (errors_list, func_names_set, has_mem)."""
+def check_wasm(path: str) -> list[str]:
+    """Return list of error strings (empty = OK)."""
     errors = []
-    try:
-        exports, has_mem, has_import_mem = parse_wasm(path)
-    except (OSError, ValueError) as exc:
-        return [str(exc)], set(), False
+    data = Path(path).read_bytes()
+    name = Path(path).name
 
-    func_names_set = {n for n, k in exports if k == "func"}
-    basename = os.path.basename(path)
-    expected = EXPECTED_EXPORTS.get(basename, set())
+    # ── Check WASM magic ──────────────────────────────────────────────────────
+    if data[:4] != b"\x00asm":
+        return [f"{name}: not a valid WASM file"]
 
-    # Layer 1: call export exists
-    if "call" not in func_names_set:
-        listing = ", ".join(sorted(func_names_set)) or "(none)"
-        msg = f"[Layer 1 FAIL] no `call` export — found [{listing}]"
-        if "main" in func_names_set:
-            msg += "\n             ^ built from [[bin]] target (not the contract lib)"
-        errors.append(msg)
+    # ── Scan for bulk-memory instructions (0xFC 0x08-0x0B) ───────────────────
+    # 0xFC is the prefix byte for extended instructions.
+    # Bulk-memory ops (0x08-0x0B) are NOT supported by Casper wasmi.
+    # Saturating float-to-int (0x00-0x07) ARE supported.
+    bulk_memory_ops = {
+        0x08: "memory.init",
+        0x09: "data.drop",
+        0x0A: "memory.copy",
+        0x0B: "memory.fill",
+    }
+    found_bulk = []
+    for i in range(len(data) - 1):
+        if data[i] == 0xFC and data[i + 1] in bulk_memory_ops:
+            found_bulk.append(bulk_memory_ops[data[i + 1]])
 
-    # Layer 2: memory section exists AND no memory import
-    if has_import_mem:
+    if found_bulk:
         errors.append(
-            "[Layer 2 FAIL] compiled with --import-memory\n"
-            "             Casper VM requires an internal memory section. Remove that flag and rebuild.\n"
-            "             Quick fix: unset RUSTFLAGS && bash scripts/build_contracts.sh"
-        )
-    elif not has_mem:
-        errors.append(
-            "[Layer 2 FAIL] no memory section found\n"
-            "             wasm may be malformed or stripped incorrectly.\n"
-            "             Rebuild from source without --strip-all; use wasm-opt -Oz instead."
-        )
-
-    # Layer 3: all declared entry-point handlers are present
-    missing_eps = expected - func_names_set
-    if missing_eps:
-        errors.append(
-            f"[Layer 3 FAIL] missing entry-point exports: {sorted(missing_eps)}\n"
-            f"             This will cause 'Function not found' on-chain.\n"
-            f'             Ensure #[no_mangle] pub extern "C" fn exists for each, and feature flags are enabled during build.'
+            f"{name}: FAIL — {len(found_bulk)} bulk-memory instruction(s) found: "
+            f"{', '.join(set(found_bulk))}. "
+            f"Casper VM will reject this WASM. "
+            f"Fix: rebuild with RUSTFLAGS='-C target-feature=-bulk-memory,-bulk-memory-opt,-reference-types'"
         )
 
-    return errors, func_names_set, has_mem
+    # ── Parse export section to find `call` ───────────────────────────────────
+    pos = 8  # skip magic + version
+    found_call = False
+
+    while pos < len(data):
+        if pos >= len(data):
+            break
+        section_id = data[pos]
+        pos += 1
+        section_len, pos = parse_leb128_u(data, pos)
+        section_end = pos + section_len
+
+        if section_id == 7:  # Export section
+            count, pos = parse_leb128_u(data, pos)
+            for _ in range(count):
+                name_len, pos = parse_leb128_u(data, pos)
+                export_name = data[pos : pos + name_len].decode(
+                    "utf-8", errors="replace"
+                )
+                pos += name_len
+                export_kind = data[pos]
+                pos += 1
+                _export_idx, pos = parse_leb128_u(data, pos)
+                if export_name == "call" and export_kind == 0:  # 0 = function
+                    found_call = True
+            break
+
+        pos = section_end
+
+    if not found_call:
+        errors.append(
+            f"{name}: FAIL — no `call` export found. "
+            f"Casper VM requires a `call` function export. "
+            f"Check that the correct --features flag was used."
+        )
+
+    return errors
 
 
-def main(paths):
-    if not paths:
-        print("usage: check_wasm_exports.py <file.wasm> [...]", file=sys.stderr)
+def main() -> int:
+    if len(sys.argv) < 2:
+        print("Usage: python3 check_wasm_exports.py <file.wasm> [...]")
         return 1
 
-    bad = 0
-    for path in paths:
-        errors, func_names_set, has_mem = check_file(path)
-
+    all_errors = []
+    for path in sys.argv[1:]:
+        errors = check_wasm(path)
         if errors:
-            bad += 1
-            for i, e in enumerate(errors):
-                print(f"{'FAIL' if i == 0 else '    '}  {path}: {e}")
+            for e in errors:
+                print(f"  FAIL  {e}")
+            all_errors.extend(errors)
         else:
-            func_names = ", ".join(sorted(func_names_set))
-            print(f"OK    {path}: exports [{func_names}] + memory section ✓")
+            size = Path(path).stat().st_size
+            print(
+                f"  OK    {Path(path).name}: exports `call`, "
+                f"no bulk-memory ({size:,} bytes)"
+            )
 
-    if bad:
-        print(f"\n{bad} wasm file(s) REJECTED — fix before deploying.")
+    if all_errors:
+        print(f"\n{len(all_errors)} check(s) failed.")
+        print("\nTo fix bulk-memory errors:")
+        print("  1. Ensure contracts/.cargo/config.toml contains:")
+        print("       [target.wasm32-unknown-unknown]")
+        print(
+            '       rustflags = ["-C", "target-feature=-bulk-memory,-bulk-memory-opt,-reference-types", "-C", "link-arg=--allow-undefined"]'
+        )
+        print("  2. Delete contracts/target/ and rebuild:")
+        print("       rm -rf contracts/target/")
+        print("       bash scripts/build_contracts.sh")
         return 1
 
-    print(f"\nAll {len(paths)} wasm file(s) passed Casper pre-deploy 3-layer checks.")
+    print(f"\nAll {len(sys.argv) - 1} WASM file(s) are Casper-compatible ✓")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

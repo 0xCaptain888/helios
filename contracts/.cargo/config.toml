@@ -1,0 +1,10 @@
+# Casper VM compatibility — disable WASM features not supported by wasmi.
+#
+# The Casper node's WASM runtime (wasmi) supports only the WASM MVP subset plus
+# sign-extension-ops and nontrapping-float-to-int. Modern Rust/LLVM enable
+# bulk-memory and reference-types by default; we must turn them off or the
+# node returns:
+#   "Wasm preprocessing error: Bulk memory operations are not supported"
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=-bulk-memory,-bulk-memory-opt,-reference-types", "-C", "link-arg=--allow-undefined"]

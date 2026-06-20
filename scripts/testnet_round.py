@@ -2,26 +2,21 @@
 """Drive real Casper Testnet transactions for Helios.
 
 Usage:
-  HELIOS_MODE=testnet python3 scripts/testnet_round.py --register --list
+  HELIOS_MODE=testnet python3 scripts/testnet_round.py --register
+  HELIOS_MODE=testnet python3 scripts/testnet_round.py --list
   HELIOS_MODE=testnet python3 scripts/testnet_round.py --rounds 3
-
-Requires agents/testnet.env (keys + contract hashes) — see docs/TESTNET.md.
-Every action prints the resulting transaction hash with a testnet.cspr.live
-link, ready to paste into the submission.
+  HELIOS_MODE=testnet python3 scripts/testnet_round.py --register --list --rounds 3
+  HELIOS_MODE=testnet python3 scripts/testnet_round.py --rounds 3 --veto-round 2
 """
 
 from __future__ import annotations
-
-import argparse
-import json
-import sys
-import time
+import argparse, json, sys, time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from agents.common import config  # noqa: E402
-from agents.common.chain import TestnetChain  # noqa: E402
+from agents.common import config
+from agents.common.chain import TestnetChain
 
 ORACLES = [
     (
@@ -30,7 +25,7 @@ ORACLES = [
         "rates",
         "us_tbill_3m",
         "US 3M T-Bill yield (%)",
-        config.PRICES_MOTES["us_tbill_3m"],
+        2 * config.CSPR,
         5.31,
     ),
     (
@@ -39,8 +34,8 @@ ORACLES = [
         "commodities",
         "xau_usd",
         "Gold spot XAU/USD",
-        config.PRICES_MOTES["xau_usd"],
-        2384.2,
+        3 * config.CSPR,
+        2384.20,
     ),
     (
         "oracle_reindex",
@@ -48,102 +43,131 @@ ORACLES = [
         "real-estate",
         "re_index_us",
         "US tokenized RE index",
-        config.PRICES_MOTES["re_index_us"],
-        189.7,
+        5 * config.CSPR,
+        189.70,
     ),
 ]
 
+POSITIONS = [
+    {"asset": "CSPR", "weight_bps": 1500},
+    {"asset": "US_TBILL_3M", "weight_bps": 4000},
+    {"asset": "XAU", "weight_bps": 2500},
+    {"asset": "RE_INDEX_US", "weight_bps": 2000},
+]
+assert sum(p["weight_bps"] for p in POSITIONS) == 10_000
 
-def show(label: str, tx: str, chain: TestnetChain) -> None:
-    print(f"  {label:<28} {tx}")
-    print(f"  {'':<28} {chain.explorer_link(tx)}")
+
+def show(label, dh, chain):
+    print(f"  ✓ {label:<36} {dh[:16]}…")
+    print(f"    {chain.explorer_link(dh)}")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--register", action="store_true", help="register oracle identities"
+def sleep(seconds, label=""):
+    tag = f" ({label})" if label else ""
+    print(f"  ⏳ waiting {seconds:.0f}s{tag}…", flush=True)
+    time.sleep(seconds)
+
+
+def step_register(chain):
+    print("\n== Step: register oracle identities ==")
+    for role, name, cat, feed, _title, price, _ in ORACLES:
+        dh = chain.register_oracle(
+            role, name, cat, f"https://helios-demo.example/{feed}", price
+        )
+        show(f"OracleRegistry.register [{name}]", dh, chain)
+        sleep(3, "nonce gap")
+
+
+def step_list_feeds(chain):
+    print("\n== Step: list feeds on DataMarket ==")
+    for role, name, _cat, feed, title, price, _ in ORACLES:
+        dh = chain.list_feed(
+            role, feed, title, price, f"https://helios-demo.example/{feed}"
+        )
+        show(f"DataMarket.list_feed [{feed}]", dh, chain)
+        sleep(3, "nonce gap")
+
+
+def step_round(chain, round_no, veto=False):
+    print(f"\n== Round {round_no}{' [VETO]' if veto else ''} ==")
+
+    receipts = []
+    for i, (role, name, _cat, feed, _title, price, base_val) in enumerate(ORACLES):
+        value = round(base_val * (1 + 0.001 * round_no), 4)
+        dh_att = chain.post_attestation(role, feed, str(value))
+        show(f"OracleRegistry.post_attestation [{feed}]", dh_att, chain)
+        receipt_id = f"x402:r{round_no}:{feed}"
+        dh_anc = chain.anchor_x402_receipt(role, i, price, receipt_id)
+        show(f"DataMarket.anchor_x402_receipt [{feed}]", dh_anc, chain)
+        receipts.append(dh_anc)
+        sleep(3, "nonce gap")
+
+    summary = f"Round {round_no}: CSPR 15% TBILL 40% XAU 25% RE 20%" + (
+        " — VETO TEST" if veto else ""
     )
-    parser.add_argument(
-        "--list", action="store_true", help="list feeds on the DataMarket"
+    pid, dh_prop = chain.gov_submit(
+        "fund_agent",
+        summary,
+        json.dumps(
+            {
+                "positions": POSITIONS,
+                "receipts": receipts,
+            }
+        ),
     )
-    parser.add_argument(
-        "--rounds", type=int, default=0, help="run N attest+anchor+governance rounds"
-    )
+    show(f"Governance.propose [id={pid}]", dh_prop, chain)
+
+    if veto:
+        sleep(5, "let proposal settle")
+        dh_veto = chain.gov_veto("risk_agent", pid, "Test veto")
+        show(f"Governance.veto [id={pid}]", dh_veto, chain)
+        print(f"  → Proposal {pid} vetoed ✓")
+    else:
+        sleep(95, f"veto window proposal {pid}")
+        dh_fin = chain.gov_finalize("fund_agent", pid)
+        show(f"Governance.finalize [id={pid}]", dh_fin, chain)
+        nav_motes = (1_000_000 + round_no * 1_500) * config.CSPR // 1_000_000
+        dh_reb = chain.execute_rebalance(
+            "fund_agent", pid, POSITIONS, nav_motes, ",".join(receipts)
+        )
+        show("FundVault.execute_rebalance", dh_reb, chain)
+        dh_nav = chain.record_nav("fund_agent", nav_motes, yield_bps=50)
+        show("FundVault.record_nav", dh_nav, chain)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Helios testnet transaction driver")
+    parser.add_argument("--register", action="store_true")
+    parser.add_argument("--list", action="store_true")
+    parser.add_argument("--rounds", type=int, default=0)
+    parser.add_argument("--veto-round", type=int, default=None, metavar="N")
     args = parser.parse_args()
 
     if config.MODE != "testnet":
-        print("Set HELIOS_MODE=testnet to use this script (see docs/TESTNET.md)")
+        print("ERROR: export HELIOS_MODE=testnet")
+        return 1
+    if not any([args.register, args.list, args.rounds > 0]):
+        parser.print_help()
+        return 0
+
+    try:
+        chain = TestnetChain()
+    except (RuntimeError, FileNotFoundError) as exc:
+        print(f"ERROR: {exc}")
         return 1
 
-    chain = TestnetChain()
+    print("Connected. Contracts:")
+    for name, h in chain.contracts.items():
+        print(f"  {name:<10} {h}")
 
     if args.register:
-        print("== register oracle identities ==")
-        for key_name, name, cat, feed, title, price, _v in ORACLES:
-            tx = chain.register_oracle(
-                chain.keys[key_name], name, cat, f"https://helios.example/{feed}", price
-            )
-            show(f"registry.register {name}", tx, chain)
-            time.sleep(2)
-
+        step_register(chain)
     if args.list:
-        print("== list feeds on DataMarket ==")
-        for key_name, name, cat, feed, title, price, _v in ORACLES:
-            tx = chain.list_feed(
-                chain.keys[key_name],
-                feed,
-                title,
-                price,
-                f"https://helios.example/{feed}",
-            )
-            show(f"market.list_feed {feed}", tx, chain)
-            time.sleep(2)
+        step_list_feeds(chain)
+    for r in range(1, args.rounds + 1):
+        step_round(chain, r, veto=(args.veto_round == r))
 
-    for round_no in range(1, args.rounds + 1):
-        print(f"== round {round_no} ==")
-        receipts = []
-        for i, (key_name, name, cat, feed, title, price, base) in enumerate(ORACLES):
-            value = round(base * (1 + 0.001 * round_no), 4)
-            tx = chain.post_attestation(chain.keys[key_name], feed, str(value))
-            show(f"registry.post_attestation {feed}", tx, chain)
-            tx2 = chain.anchor_x402_receipt(
-                chain.keys[key_name], i, price, f"x402:round{round_no}:{feed}"
-            )
-            show(f"market.anchor_x402_receipt {feed}", tx2, chain)
-            receipts.append(tx2)
-            time.sleep(2)
-
-        positions = [
-            {"asset": "CSPR", "weight_bps": 1500},
-            {"asset": "US_TBILL_3M", "weight_bps": 4000},
-            {"asset": "XAU", "weight_bps": 2500},
-            {"asset": "RE_INDEX_US", "weight_bps": 2000},
-        ]
-        payload = json.dumps(
-            {
-                "positions": positions,
-                "data_receipts": receipts,
-                "max_data_age_seconds": 5,
-            }
-        )
-        summary = f"Testnet round {round_no}: CSPR 15% TBILL 40% XAU 25% RE 20%"
-        proposal_id, tx = chain.gov_submit(chain.keys["fund_agent"], summary, payload)
-        show("gov.submit", tx, chain)
-        print("  waiting out the veto window (95s)...")
-        time.sleep(95)
-        tx = chain.gov_finalize(chain.keys["fund_agent"], proposal_id)
-        show("gov.finalize", tx, chain)
-        tx = chain.execute_rebalance(
-            chain.keys["fund_agent"],
-            proposal_id,
-            positions,
-            1_000_000 + round_no * 1500,
-            ",".join(receipts),
-        )
-        show("vault.execute_rebalance", tx, chain)
-
-    print("\nDone. Paste the cspr.live links above into the submission.")
+    print("\nDone. Paste cspr.live links into your submission.")
     return 0
 
 
