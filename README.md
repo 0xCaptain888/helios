@@ -6,6 +6,18 @@ Built for the **Casper Agentic Buildathon 2026**.
 
 ---
 
+## Current Status
+
+| Component | Status |
+|-----------|--------|
+| Smart Contracts (4x) | `#![no_std]` + casper-contract v5 + casper-types v6 — compiled to WASM |
+| Deploy Script | Pure Python, secp256k1 + ed25519 support, CLType serialization fixed |
+| WASM Binaries | OracleRegistry (65KB), DataMarket (69KB), FundVault (60KB), Governance (61KB) |
+| Testnet Wallets | 5x secp256k1 accounts ready |
+| Testnet Deployment | Ready — requires CSPR faucet funding |
+
+---
+
 ## The problem
 
 Every serious DeFi or RWA protocol needs reliable real-world data. Today that means trusting a handful of monolithic oracle networks — expensive, subscription-based, and built for humans signing contracts, not for autonomous agents paying per request.
@@ -60,20 +72,21 @@ Full details in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 | Path | What |
 |---|---|
-| `contracts/` | Four native Casper smart contracts (Rust, zero Odra dependency) + unit tests |
+| `contracts/` | Four native Casper smart contracts (Rust `#![no_std]`, casper-contract v5 / casper-types v6) + WASM binaries |
+| `contracts/wasm/` | Pre-built WASM binaries ready for testnet deployment |
 | `agents/` | Oracle / fund / risk agents + x402 facilitator (pure Python stdlib) |
 | `frontend/` | Zero-build dashboard (vanilla HTML/CSS/JS) |
-| `scripts/` | Testnet deployment + 3-layer wasm pre-deploy gate |
-| `docs/` | Architecture & Casper Testnet runbook |
+| `scripts/` | Testnet deployment (`casper_deploy.py`) + build scripts |
+| `docs/` | Architecture, deployment guide, fix report |
 | `demo.py` | One-command local machine economy |
 
 ## Smart contracts
 
-Built natively with `cargo`, requiring **zero Odra toolchain dependencies**.
+Built natively with `cargo` on **casper-contract v5** and **casper-types v6**, requiring **zero Odra toolchain dependencies**. All contracts use `#![no_std]` with `wee_alloc` for the Casper VM.
 
 ```bash
 cd contracts
-cargo test                          # 12 unit tests (host build)
+cargo test                          # unit tests (host build)
 
 # Build all 4 contracts to WASM (with feature flags)
 bash ../scripts/build_contracts.sh
@@ -83,7 +96,30 @@ bash ../scripts/build_contracts.sh
 python3 ../scripts/check_wasm_exports.py wasm/*.wasm
 ```
 
-Deployment to Casper Testnet: [`docs/TESTNET.md`](docs/TESTNET.md) and `scripts/casper_deploy.py` (pure Python, zero `casper-client` required).
+### Testnet deployment
+
+Pure Python deploy script — no `casper-client` or Rust toolchain needed. Supports both **secp256k1** (Casper Wallet) and **ed25519** keys.
+
+```bash
+# Check key info
+python3 scripts/casper_deploy.py pubkey --key "Account 1_secret_key.pem"
+
+# One-click deploy all 4 contracts + wiring
+python3 scripts/casper_deploy.py deploy-all --key "Account 1_secret_key.pem"
+
+# Or deploy individually
+python3 scripts/casper_deploy.py install --key "Account 1_secret_key.pem" \
+    --wasm contracts/wasm/OracleRegistry.wasm --wait
+
+# Call contract entry-points
+python3 scripts/casper_deploy.py call --key "Account 1_secret_key.pem" \
+    --contract <HASH> --entry-point register \
+    --args "name:string=TBill Oracle" "category:string=rwa" \
+           "endpoint:string=https://helios.example/quote" "price_motes:u64=2000000000" \
+    --wait
+```
+
+Full deployment guide: [`docs/DEPLOYMENT_GUIDE.md`](docs/DEPLOYMENT_GUIDE.md)
 
 ## Modes
 
