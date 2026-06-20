@@ -13,8 +13,8 @@ Built for the **Casper Agentic Buildathon 2026**.
 | Smart Contracts (4x) | `#![no_std]` + casper-contract v5 + casper-types v6 — compiled to WASM with access control |
 | Deploy Script | Pure Python, secp256k1 + ed25519 support, all serialization bugs fixed |
 | WASM Binaries | OracleRegistry (67KB), DataMarket (69KB), FundVault (60KB), Governance (65KB) |
-| Testnet Wallets | 5x secp256k1 accounts ready |
-| Testnet Deployment | Ready — requires CSPR faucet funding |
+| Testnet Wallets | 5x secp256k1 accounts ready (Account 2-5 funded) |
+| Testnet Deployment | **In progress** — deploying to Casper Testnet |
 | Security | Access control added to governance, oracle registry, and market contracts |
 
 ---
@@ -133,7 +133,20 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 
 ## Recent changes (2026-06-20)
 
-### Security & access control (latest)
+### Deploy script critical fixes (latest)
+
+**Fixed body hash and deploy hash computation:**
+- Fixed `RuntimeArgs` serialization: removed incorrect outer `len_prefix` wrapper (was causing "invalid body hash" errors)
+- Fixed timestamp precision: `_ms_to_iso()` now preserves milliseconds instead of truncating to `.000Z` (was causing "invalid deploy hash" errors)
+- Reordered RPC nodes: `node.testnet.casper.network` is now primary (more reliable than `rpc.testnet.cspr.cloud`)
+
+**Testnet deployment status:**
+- All 4 WASM contracts compiled successfully with feature flags
+- 3-layer pre-deploy checks pass (call export, memory section, entry points)
+- OracleRegistry deployment submitted to testnet
+- Using `casper-client` CLI for reliable deployment (Python script still being debugged for signature verification)
+
+### Security & access control
 
 **Contract security hardening:**
 - Added access control to `governance.rs`: only `proposer` can create proposals, only `risk_agent` can veto

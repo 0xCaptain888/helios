@@ -38,8 +38,8 @@ from cryptography.hazmat.primitives.serialization import (
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 NODES = [
-    "https://rpc.testnet.cspr.cloud",
     "https://node.testnet.casper.network",
+    "https://rpc.testnet.cspr.cloud",
 ]
 CHAIN = "casper-test"
 EXPLORER = "https://testnet.cspr.live"
@@ -256,7 +256,9 @@ def wait_for_deploy(deploy_hash: str, timeout: int = 300, node: str = NODES[0]) 
 
 
 def _ms_to_iso(ms: int) -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime(ms // 1000))
+    secs = ms // 1000
+    millis = ms % 1000
+    return time.strftime(f"%Y-%m-%dT%H:%M:%S.{millis:03d}Z", time.gmtime(secs))
 
 
 def _body_hash(payment: bytes, session: bytes) -> str:
@@ -285,12 +287,12 @@ def _header_hash(
 
 def _payment_bytes(motes: int) -> bytes:
     arg = _named_arg("amount", _CL_U512, _u512(motes))
-    return b"\x00" + _len_prefix(b"") + _len_prefix(_u32(1) + arg)
+    return b"\x00" + _len_prefix(b"") + _u32(1) + arg
 
 
 def _wasm_session_bytes(wasm: bytes, args: list) -> bytes:
     arg_bytes = b"".join(_named_arg(n, t, v) for n, t, v in args)
-    return b"\x00" + _len_prefix(wasm) + _len_prefix(_u32(len(args)) + arg_bytes)
+    return b"\x00" + _len_prefix(wasm) + _u32(len(args)) + arg_bytes
 
 
 def _contract_session_bytes(contract_hash: str, entry_point: str, args: list) -> bytes:
@@ -299,7 +301,8 @@ def _contract_session_bytes(contract_hash: str, entry_point: str, args: list) ->
         b"\x01"
         + bytes.fromhex(contract_hash)
         + _str(entry_point)
-        + _len_prefix(_u32(len(args)) + arg_bytes)
+        + _u32(len(args))
+        + arg_bytes
     )
 
 
