@@ -34,6 +34,9 @@ Built for the **Casper Agentic Buildathon 2026**.
 - OracleRegistry.set_market: `33eb3c8b61dbc83b46413013a2fe5e8b0f72a43d53176206df90f5845a69620b`
 - FundVault.set_governance: `038bcb0d8d690f40f7704239ed0828606ca25a4ab8f85437ffed8431dc390e6a`
 
+**v4 Testnet Operations (2026-06-20):**
+- OracleRegistry.register (Beacon Rates v4): `7a42957045c8a52ea11af1a0df162633f51dea9000555637c976d8ce4341282d` - Block 8241868 - SUCCESS
+
 ---
 
 ## The problem
@@ -164,7 +167,7 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 - `index.html`: new `contracts-bar` section (visible in testnet mode, hidden in mock)
 - `styles.css`: contract bar + oracle address link styling
 
-**Testnet status:** Node accepting deploys but execution delayed (testnet infrastructure issue). Code verified correct — deploys will execute once testnet resumes normal operation.
+**Testnet status:** ✅ Deploy execution confirmed working on Casper 2.x testnet (block 8241868). Oracle registration successful with ECDSA(SHA256) signing.
 
 ### Testnet deployment complete + bulk-memory fix
 
@@ -187,6 +190,7 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 - Deploy format matches successful on-chain Helios deploys exactly
 - `account_put_deploy` RPC method works correctly
 - Timestamp format with milliseconds preserved
+- **Successfully executed** OracleRegistry.register on testnet (block 8241868)
 
 **Deploy script v3 fixes (historical):**
 - Fixed `RuntimeArgs` serialization: removed incorrect outer `len_prefix` wrapper
