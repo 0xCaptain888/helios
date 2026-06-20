@@ -169,6 +169,19 @@ Optional: `HELIOS_USE_LLM=1` + `ANTHROPIC_API_KEY` makes the fund agent write it
 
 **Testnet status:** ✅ Deploy execution confirmed working on Casper 2.x testnet (block 8241868). Oracle registration successful with ECDSA(SHA256) signing.
 
+**Successful v4 Operations:**
+- OracleRegistry.register (Beacon Rates v4): `7a42957045c8a52ea11af1a0df162633f51dea9000555637c976d8ce4341282d` - Block 8241868 - SUCCESS
+- Cost: 10 CSPR (10,000,000,000 motes)
+- All 4 contracts verified on-chain
+
+**Current Status:**
+- ✅ v4 code upgrade complete (casper_deploy.py, serve_dashboard.py, frontend)
+- ✅ secp256k1 signing verified (ECDSA+SHA256)
+- ✅ Mock demo running (6 rounds, 18 x402 payments, 1 veto)
+- ✅ Documentation updated (README, FIX_REPORT.md, TESTNET.md)
+- ⚠️ Testnet accounts need tokens from faucet (currently 0 CSPR)
+- ⏳ Pending: Register 3 oracles, list feeds, run testnet_round.py
+
 ### Testnet deployment complete + bulk-memory fix
 
 **All 4 contracts deployed to Casper Testnet:**
@@ -269,38 +282,3 @@ Full fix details: [`docs/FIX_REPORT.md`](docs/FIX_REPORT.md)
 ## License
 
 Apache-2.0 — see [LICENSE](LICENSE).
-
-## v4 Testnet Status Update (2026-06-20 11:30 UTC)
-
-### ✅ Completed Operations
-
-**Oracle Registration:**
-- Account 2 successfully registered "Beacon Rates v4" oracle
-- Deploy hash: `7a42957045c8a52ea11af1a0df162633f51dea9000555637c976d8ce4341282d`
-- Block: 8241868
-- Status: SUCCESS
-- Cost: 10 CSPR (10,000,000,000 motes)
-
-**Contract Verification:**
-- ✓ OracleRegistry: exists
-- ✓ DataMarket: exists  
-- ✓ FundVault: exists
-- ✓ Governance: exists
-
-### ⚠️ Current Issue
-
-All testnet accounts (Account 1-5) currently show 0 CSPR balance. This prevents further on-chain operations.
-
-**Possible causes:**
-1. Testnet may have been reset
-2. Accounts need to request tokens from faucet again
-3. Temporary testnet infrastructure issue
-
-**Next steps:**
-- Request testnet tokens from Casper faucet for Account 2-5
-- Continue with oracle registration and feed listing
-- Run full testnet_round.py test
-
-### Technical Notes
-
-The v4 signing implementation (ECDSA+SHA256 with DER→raw64 conversion) has been verified to work correctly on Casper 2.x testnet. The successful deploy confirms the implementation is correct.
