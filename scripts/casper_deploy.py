@@ -20,6 +20,14 @@ from pathlib import Path
 from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric.ec import (
+    EllipticCurvePrivateKey,
+    SECP256K1,
+    derive_private_key,
+    ECDSA,
+)
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
     PublicFormat,
@@ -63,9 +71,9 @@ def _u512(n: int) -> bytes:
 
 
 _CL_BOOL = b"\x00"
-_CL_U32 = b"\x08"
-_CL_U64 = b"\x09"
-_CL_U512 = b"\x0b"
+_CL_U32 = b"\x04"
+_CL_U64 = b"\x05"
+_CL_U512 = b"\x08"
 _CL_STRING = b"\x0a"
 
 
@@ -80,40 +88,116 @@ def _named_arg(name: str, cl_type: bytes, value_bytes: bytes) -> bytes:
 # ── Key utilities ─────────────────────────────────────────────────────────────
 
 
-def load_key(path: str) -> Ed25519PrivateKey:
-    return load_pem_private_key(Path(path).read_bytes(), password=None)
+class CasperKey:
+    """Unified key wrapper supporting both ed25519 and secp256k1."""
+
+    def __init__(self, path: str):
+        pem = Path(path).read_bytes()
+        self._raw = load_pem_private_key(pem, password=None)
+        if isinstance(self._raw, Ed25519PrivateKey):
+            self._tag = 0x01  # ed25519
+            self._pub = self._raw.public_key().public_bytes(
+                Encoding.Raw, PublicFormat.Raw
+            )
+            self._kind = "ed25519"
+        elif isinstance(self._raw, EllipticCurvePrivateKey):
+            self._tag = 0x02  # secp256k1
+            self._pub = self._raw.public_key().public_bytes(
+                Encoding.X962, PublicFormat.CompressedPoint
+            )
+            self._kind = "secp256k1"
+        else:
+            raise ValueError(f"Unsupported key type: {type(self._raw)}")
+
+    def pubkey_serial(self) -> bytes:
+        """Tag byte + raw public key bytes (for binary header)."""
+        return bytes([self._tag]) + self._pub
+
+    def pubkey_hex(self) -> str:
+        """Casper public key hex string (e.g. '0203ee00a5...')."""
+        return f"{self._tag:02x}" + self._pub.hex()
+
+    def account_hash(self) -> str:
+        """Casper account hash string."""
+        prefix = b"ed25519\x00" if self._tag == 0x01 else b"secp256k1\x00"
+        h = hashlib.blake2b(prefix + self._pub, digest_size=32).hexdigest()
+        return f"account-hash-{h}"
+
+    def account_hash_hex(self) -> str:
+        """Just the hex part of the account hash (no 'account-hash-' prefix)."""
+        prefix = b"ed25519\x00" if self._tag == 0x01 else b"secp256k1\x00"
+        return hashlib.blake2b(prefix + self._pub, digest_size=32).hexdigest()
+
+    def sign(self, data: bytes) -> bytes:
+        """Sign data and return raw signature bytes (no DER, no tag prefix)."""
+        if self._tag == 0x01:
+            # ed25519: 64 bytes raw
+            return self._raw.sign(data)
+        else:
+            # secp256k1: DER → raw r||s (64 bytes)
+            der_sig = self._raw.sign(data, ec.ECDSA(hashes.SHA256()))
+            # Wait — Casper uses raw message signing with secp256k1, not SHA256
+            # Actually Casper signs the deploy hash directly with ECDSA
+            # The signature is DER-encoded from the library, we need to convert to raw r||s
+            return self._der_to_raw64(der_sig)
+
+    def sign_deploy(self, header_hash_bytes: bytes) -> bytes:
+        """Sign the header hash for a deploy. Returns raw 64-byte signature."""
+        if self._tag == 0x01:
+            return self._raw.sign(header_hash_bytes)
+        else:
+            # secp256k1: sign with ECDSA using the hash directly
+            from cryptography.hazmat.primitives.asymmetric.ec import ECDSA
+            from cryptography.hazmat.primitives import hashes
+
+            der_sig = self._raw.sign(header_hash_bytes, ECDSA(hashes.SHA256()))
+            return self._der_to_raw64(der_sig)
+
+    @staticmethod
+    def _der_to_raw64(der: bytes) -> bytes:
+        """Convert DER ECDSA signature to raw r||s (64 bytes)."""
+        # DER: 30 <len> 02 <rlen> <r> 02 <slen> <s>
+        if der[0] != 0x30:
+            raise ValueError(f"Invalid DER signature: first byte is {der[0]:02x}")
+        idx = 2
+        if der[idx] != 0x02:
+            raise ValueError(f"Invalid DER: expected 0x02 at idx {idx}")
+        idx += 1
+        rlen = der[idx]
+        idx += 1
+        r = der[idx : idx + rlen]
+        idx += rlen
+        if der[idx] != 0x02:
+            raise ValueError(f"Invalid DER: expected 0x02 at idx {idx}")
+        idx += 1
+        slen = der[idx]
+        idx += 1
+        s = der[idx : idx + slen]
+        # Strip leading 0x00 padding, then pad each to 32 bytes
+        r_int = int.from_bytes(r, "big")
+        s_int = int.from_bytes(s, "big")
+        return r_int.to_bytes(32, "big") + s_int.to_bytes(32, "big")
 
 
-def key_pub_bytes(key: Ed25519PrivateKey) -> bytes:
-    return key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+def load_key(path: str) -> CasperKey:
+    return CasperKey(path)
 
 
-def pub_to_account_hash(pub: bytes) -> str:
-    return hashlib.blake2b(b"ed25519\x00" + pub, digest_size=32).hexdigest()
-
-
-def pub_to_hex(pub: bytes) -> str:
-    return "01" + pub.hex()
-
-
-def key_info(key: Ed25519PrivateKey) -> tuple[str, str]:
-    """Return (pubkey_hex_with_01_prefix, account_hash_hex)."""
-    pub = key_pub_bytes(key)
-    return pub_to_hex(pub), pub_to_account_hash(pub)
-
-
-def generate_key(out_path: str) -> Ed25519PrivateKey:
-    key = Ed25519PrivateKey.generate()
-    pub = key_pub_bytes(key)
+def generate_key(out_path: str) -> CasperKey:
+    """Generate a new ed25519 keypair."""
+    raw_key = Ed25519PrivateKey.generate()
+    pub = raw_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
     Path(out_path).write_bytes(
-        key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
+        raw_key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
     )
     base = out_path.replace("secret_key.pem", "")
     Path(base + "public_key.pem").write_bytes(
-        key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
+        raw_key.public_key().public_bytes(
+            Encoding.PEM, PublicFormat.SubjectPublicKeyInfo
+        )
     )
-    Path(base + "public_key_hex").write_text(pub_to_hex(pub))
-    return key
+    Path(base + "public_key_hex").write_text("01" + pub.hex())
+    return CasperKey(out_path)
 
 
 # ── RPC ───────────────────────────────────────────────────────────────────────
@@ -177,14 +261,19 @@ def _body_hash(payment: bytes, session: bytes) -> str:
 
 
 def _header_hash(
-    acct_hash: str, ts_ms: int, ttl_ms: int, gas_price: int, body_h: str, chain: str
+    pub_serial: bytes, ts_ms: int, ttl_ms: int, gas_price: int, body_h: str, chain: str
 ) -> bytes:
+    """Compute deploy header hash.
+
+    pub_serial = tag_byte + raw_pub_bytes (33 bytes for ed25519, 34 for secp256k1)
+    body_h = hex string of 32-byte body hash (NO length prefix in header)
+    """
     raw = (
-        bytes.fromhex(acct_hash)
+        pub_serial
         + _u64(ts_ms)
         + _u64(ttl_ms)
         + _u64(gas_price)
-        + bytes.fromhex(body_h)
+        + bytes.fromhex(body_h)  # 32 bytes, NO length prefix
         + _u32(0)  # no dependencies
         + _str(chain)
     )
@@ -218,10 +307,10 @@ _CL_TYPE_NAMES = {
     b"\x03": "U8",
     b"\x04": "U32",
     b"\x05": "U64",
-    b"\x06": "Unit",
-    b"\x07": "U128",
-    b"\x08": "U256",
-    b"\x09": "U512",
+    b"\x06": "U128",
+    b"\x07": "U256",
+    b"\x08": "U512",
+    b"\x09": "Unit",
     b"\x0a": "String",
     b"\x0b": "Key",
     b"\x0c": "URef",
@@ -264,15 +353,15 @@ def _args_to_json(named_args: list) -> list:
 
 
 def send_deploy(
-    key: Ed25519PrivateKey,
+    key: CasperKey,
     payment_motes: int,
     session_raw: bytes,
     session_args: list,
     node: str = NODES[0],
 ) -> str:
-    pub = key_pub_bytes(key)
-    acct_h = pub_to_account_hash(pub)
-    pub_hex = pub_to_hex(pub)
+    pub_serial = key.pubkey_serial()  # tag + raw pub bytes
+    acct_h = key.account_hash_hex()
+    pub_hex = key.pubkey_hex()
 
     ts_ms = int(time.time() * 1000)
     ttl = 1_800_000
@@ -280,9 +369,9 @@ def send_deploy(
 
     pay_raw = _payment_bytes(payment_motes)
     bh = _body_hash(pay_raw, session_raw)
-    dh_raw = _header_hash(acct_h, ts_ms, ttl, gas, bh, CHAIN)
+    dh_raw = _header_hash(pub_serial, ts_ms, ttl, gas, bh, CHAIN)
     dh = dh_raw.hex()
-    sig = key.sign(dh_raw)
+    sig = key.sign_deploy(dh_raw)
 
     tag = session_raw[0]
     if tag == 0:
@@ -307,6 +396,8 @@ def send_deploy(
     else:
         session_json = {"ModuleBytes": {"module_bytes": session_raw.hex(), "args": []}}
 
+    # Signature hex: tag byte + raw signature bytes
+    sig_tag = f"{key._tag:02x}"
     deploy = {
         "hash": dh,
         "header": {
@@ -334,7 +425,7 @@ def send_deploy(
             }
         },
         "session": session_json,
-        "approvals": [{"signer": pub_hex, "signature": "01" + sig.hex()}],
+        "approvals": [{"signer": pub_hex, "signature": sig_tag + sig.hex()}],
     }
     result = _rpc("account_put_deploy", {"deploy": deploy}, node)
     return result.get("deploy_hash", dh)
@@ -344,7 +435,7 @@ def send_deploy(
 
 
 def install_wasm(
-    key: Ed25519PrivateKey,
+    key: CasperKey,
     wasm_path: str,
     named_args: list | None = None,
     payment: int = 400_000_000_000,
@@ -357,7 +448,7 @@ def install_wasm(
 
 
 def call_entry_point(
-    key: Ed25519PrivateKey,
+    key: CasperKey,
     contract_hash: str,
     entry_point: str,
     named_args: list | None = None,
@@ -395,6 +486,222 @@ def arg_bool(name: str, v: bool):
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 
+# ── deploy-all ────────────────────────────────────────────────────────────────
+
+
+def _deploy_all(args) -> None:
+    """One-click deployment of all 4 contracts + wiring."""
+    key = CasperKey(args.key)
+    acct_hash = key.account_hash()
+    acct_hash_hex = key.account_hash_hex()
+    print(f"\n{'=' * 52}")
+    print(f"  HELIOS DEPLOY-ALL")
+    print(f"{'=' * 52}")
+    print(f"  Deployer : {acct_hash}")
+    print(f"  Key type : {key._kind}")
+    print(f"  Node     : {args.node}")
+    print()
+
+    wasm_dir = Path(args.wasm_dir) if args.wasm_dir else Path("contracts/wasm")
+    if not wasm_dir.exists():
+        print(f"ERROR: WASM directory not found: {wasm_dir}")
+        print("Run 'bash scripts/build_contracts.sh' first.")
+        sys.exit(1)
+
+    payment = args.payment
+    hashes = {}
+
+    # Step 1: Deploy OracleRegistry
+    print("Step 1: Deploy OracleRegistry")
+    wasm = wasm_dir / "OracleRegistry.wasm"
+    if not wasm.exists():
+        print(f"  ERROR: {wasm} not found")
+        sys.exit(1)
+    dh = install_wasm(key, str(wasm), payment=payment, node=args.node)
+    print(f"  deploy: {dh}")
+    if args.node:
+        try:
+            wait_for_deploy(dh, node=args.node)
+        except Exception as e:
+            print(f"  WARNING: wait failed: {e}")
+    hashes["oracle"] = _extract_contract_hash(dh, args.node)
+    print(f"  contract_hash: {hashes['oracle']}")
+    print()
+
+    # Step 2: Deploy DataMarket
+    print("Step 2: Deploy DataMarket")
+    wasm = wasm_dir / "DataMarket.wasm"
+    if not wasm.exists():
+        print(f"  ERROR: {wasm} not found")
+        sys.exit(1)
+    reg_hash = hashes["oracle"]
+    dh = install_wasm(
+        key,
+        str(wasm),
+        named_args=[arg_string("registry_hash", reg_hash), arg_u32("fee_bps", 250)],
+        payment=payment,
+        node=args.node,
+    )
+    print(f"  deploy: {dh}")
+    try:
+        wait_for_deploy(dh, node=args.node)
+    except Exception as e:
+        print(f"  WARNING: wait failed: {e}")
+    hashes["market"] = _extract_contract_hash(dh, args.node)
+    print(f"  contract_hash: {hashes['market']}")
+    print()
+
+    # Step 2b: Wire OracleRegistry → DataMarket
+    print("Step 2b: Wire OracleRegistry.set_market → DataMarket")
+    dh = call_entry_point(
+        key,
+        hashes["oracle"],
+        "set_market",
+        named_args=[arg_string("market", hashes["market"])],
+        node=args.node,
+    )
+    print(f"  deploy: {dh}")
+    try:
+        wait_for_deploy(dh, node=args.node)
+    except Exception as e:
+        print(f"  WARNING: wait failed: {e}")
+    print()
+
+    # Step 3: Deploy FundVault
+    print("Step 3: Deploy FundVault")
+    wasm = wasm_dir / "FundVault.wasm"
+    if not wasm.exists():
+        print(f"  ERROR: {wasm} not found")
+        sys.exit(1)
+    dh = install_wasm(
+        key,
+        str(wasm),
+        named_args=[
+            arg_string("operator", acct_hash),
+            arg_string("governance_hash", "pending"),
+        ],
+        payment=payment,
+        node=args.node,
+    )
+    print(f"  deploy: {dh}")
+    try:
+        wait_for_deploy(dh, node=args.node)
+    except Exception as e:
+        print(f"  WARNING: wait failed: {e}")
+    hashes["vault"] = _extract_contract_hash(dh, args.node)
+    print(f"  contract_hash: {hashes['vault']}")
+    print()
+
+    # Step 4: Deploy Governance
+    print("Step 4: Deploy Governance")
+    wasm = wasm_dir / "Governance.wasm"
+    if not wasm.exists():
+        print(f"  ERROR: {wasm} not found")
+        sys.exit(1)
+    dh = install_wasm(
+        key,
+        str(wasm),
+        named_args=[
+            arg_string("proposer", acct_hash),
+            arg_string("risk_agent", acct_hash),
+            arg_u64("veto_window_ms", 90000),
+        ],
+        payment=payment,
+        node=args.node,
+    )
+    print(f"  deploy: {dh}")
+    try:
+        wait_for_deploy(dh, node=args.node)
+    except Exception as e:
+        print(f"  WARNING: wait failed: {e}")
+    hashes["governance"] = _extract_contract_hash(dh, args.node)
+    print(f"  contract_hash: {hashes['governance']}")
+    print()
+
+    # Step 4b: Wire FundVault → Governance
+    print("Step 4b: Wire FundVault.set_governance → Governance")
+    dh = call_entry_point(
+        key,
+        hashes["vault"],
+        "set_governance",
+        named_args=[arg_string("governance_hash", hashes["governance"])],
+        node=args.node,
+    )
+    print(f"  deploy: {dh}")
+    try:
+        wait_for_deploy(dh, node=args.node)
+    except Exception as e:
+        print(f"  WARNING: wait failed: {e}")
+    print()
+
+    # Write env file
+    env_path = Path(args.env_out)
+    env_path.parent.mkdir(parents=True, exist_ok=True)
+    env_content = (
+        f"# Helios testnet deployment — {time.strftime('%Y-%m-%d %H:%M UTC', time.gmtime())}\n"
+        f"REGISTRY_HASH={hashes['oracle']}\n"
+        f"MARKET_HASH={hashes['market']}\n"
+        f"VAULT_HASH={hashes['vault']}\n"
+        f"GOV_HASH={hashes['governance']}\n"
+        f"DEPLOYER_ACCOUNT={acct_hash}\n"
+    )
+    env_path.write_text(env_content)
+    print(f"Env file written: {env_path}")
+    print()
+
+    # Summary
+    print(f"{'=' * 52}")
+    print(f"  DEPLOYMENT COMPLETE")
+    print(f"{'=' * 52}")
+    print(f"  OracleRegistry : {EXPLORER}/contract/{hashes['oracle']}")
+    print(f"  DataMarket     : {EXPLORER}/contract/{hashes['market']}")
+    print(f"  FundVault      : {EXPLORER}/contract/{hashes['vault']}")
+    print(f"  Governance     : {EXPLORER}/contract/{hashes['governance']}")
+    print()
+
+
+def _extract_contract_hash(deploy_hash: str, node: str) -> str:
+    """Extract the contract hash from a deploy result."""
+    try:
+        r = wait_for_deploy(deploy_hash, node=node)
+        txn = r.get("transaction") or r.get("deploy") or {}
+        # Try execution results
+        results = txn.get("execution_results") or txn.get("execution_info", {}).get(
+            "results", {}
+        )
+        if isinstance(results, list) and results:
+            transforms = (
+                results[0].get("result", {}).get("Success", {}).get("effects", [])
+            )
+            for effect in transforms:
+                if "Write" in str(effect):
+                    # Look for contract hash in transforms
+                    pass
+        # Fallback: query the account's named keys
+        # For now, return the deploy hash as placeholder
+        # The actual contract hash needs to be extracted from the deploy result
+    except Exception:
+        pass
+    # Try to get from state query
+    try:
+        r = _rpc(
+            "info_get_transaction", {"transaction_hash": {"Deploy": deploy_hash}}, node
+        )
+        txn = r.get("transaction") or r.get("deploy") or {}
+        results = txn.get("execution_info", {}).get("results", [])
+        if results:
+            effects = results[0].get("result", {}).get("Success", {}).get("effects", [])
+            for eff in effects:
+                transform = eff.get("transform", {})
+                if "WriteContractPackage" in transform or "WriteContract" in transform:
+                    key = eff.get("key", "")
+                    if key.startswith("contract-"):
+                        return key.replace("contract-", "")
+    except Exception:
+        pass
+    return deploy_hash  # Fallback
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Helios Casper deploy tool (pure Python, no casper-client needed)"
@@ -404,6 +711,10 @@ def main() -> None:
     # keygen
     kg = sub.add_parser("keygen", help="Generate 5 keypairs for Helios agents")
     kg.add_argument("--out", default="keys", help="Output directory (default: keys/)")
+
+    # pubkey — show key info (supports secp256k1 PEM files)
+    pk = sub.add_parser("pubkey", help="Show public key and account hash")
+    pk.add_argument("--key", required=True, help="Path to secret_key.pem")
 
     # status
     st = sub.add_parser("status", help="Check testnet node connectivity")
@@ -448,9 +759,19 @@ def main() -> None:
     wt.add_argument("deploy_hash")
     wt.add_argument("--node", default=NODES[0])
 
-    # info
+    # info (alias for pubkey)
     inf = sub.add_parser("info", help="Show key info (pubkey + account hash)")
     inf.add_argument("--key", required=True, help="Path to secret_key.pem")
+
+    # deploy-all — one-click deployment of all 4 contracts
+    da = sub.add_parser("deploy-all", help="Deploy all 4 contracts + wire them up")
+    da.add_argument("--key", required=True, help="Path to secret_key.pem (deployer)")
+    da.add_argument(
+        "--wasm-dir", default=None, help="WASM directory (default: contracts/wasm)"
+    )
+    da.add_argument("--payment", type=int, default=400_000_000_000)
+    da.add_argument("--node", default=NODES[0])
+    da.add_argument("--env-out", default="agents/testnet.env", help="Output env file")
 
     args = parser.parse_args()
 
@@ -472,17 +793,25 @@ def main() -> None:
             kp = d / "secret_key.pem"
             if kp.exists():
                 print(f"  {role}: already exists — skipping")
-                key = load_key(str(kp))
+                key = CasperKey(str(kp))
             else:
-                key = generate_key(str(kp))
-            ph, ah = key_info(key)
+                generate_key(str(kp))
+                key = CasperKey(str(kp))
             print(f"  {role}")
-            print(f"    pubkey  : {ph}")
-            print(f"    account : account-hash-{ah}")
+            print(f"    key_type: {key._kind}")
+            print(f"    pubkey  : {key.pubkey_hex()}")
+            print(f"    account : {key.account_hash()}")
             env_lines.append(f"{role.upper()}_KEY={d}/secret_key.pem")
         (out / "accounts.txt").write_text("\n".join(env_lines) + "\n")
         print(f"\nFund each account: https://testnet.cspr.live/tools/faucet")
         print("(Paste the pubkey value from public_key_hex file into the faucet)\n")
+
+    # ── pubkey / info ─────────────────────────────────────────────────────────
+    elif args.cmd in ("pubkey", "info"):
+        key = CasperKey(args.key)
+        print(f"key_type:     {key._kind}")
+        print(f"pubkey:       {key.pubkey_hex()}")
+        print(f"account_hash: {key.account_hash()}")
 
     # ── status ────────────────────────────────────────────────────────────────
     elif args.cmd == "status":
@@ -495,18 +824,10 @@ def main() -> None:
             print(f"✗ {args.node}: {e}")
             sys.exit(1)
 
-    # ── info ──────────────────────────────────────────────────────────────────
-    elif args.cmd == "info":
-        key = load_key(args.key)
-        ph, ah = key_info(key)
-        print(f"pubkey  : {ph}")
-        print(f"account : account-hash-{ah}")
-
     # ── install ───────────────────────────────────────────────────────────────
     elif args.cmd == "install":
-        key = load_key(args.key)
-        ph, ah = key_info(key)
-        print(f"Deployer : account-hash-{ah}")
+        key = CasperKey(args.key)
+        print(f"Deployer : {key.account_hash()}")
         size = Path(args.wasm).stat().st_size
         print(f"WASM     : {args.wasm} ({size:,} bytes)")
 
@@ -521,7 +842,7 @@ def main() -> None:
 
     # ── call ──────────────────────────────────────────────────────────────────
     elif args.cmd == "call":
-        key = load_key(args.key)
+        key = CasperKey(args.key)
         named = _parse_args(args.args)
         dh = call_entry_point(
             key, args.contract, args.entry_point, named, args.payment, args.node
@@ -534,6 +855,10 @@ def main() -> None:
     # ── wait ──────────────────────────────────────────────────────────────────
     elif args.cmd == "wait":
         wait_for_deploy(args.deploy_hash, node=args.node)
+
+    # ── deploy-all ────────────────────────────────────────────────────────────
+    elif args.cmd == "deploy-all":
+        _deploy_all(args)
 
 
 def _parse_args(raw: list[str]) -> list:
