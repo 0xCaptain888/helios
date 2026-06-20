@@ -1,12 +1,12 @@
 # Building Helios Contracts
 
-## Why no `cargo odra build`?
+## Dependencies
 
-`cargo odra build` depends on `odra-build` → `odra-schema` which silently
-pulls `odra-core >=1.5.1`. Combined with the `[[bin]]` zsh-glob trap
-(`rm -rf wasm/*.wasm` on an empty dir kills the whole command in zsh before
-cargo even runs), these two issues make the toolchain unreliable. We use
-plain `cargo build --target wasm32-unknown-unknown` instead.
+- **casper-contract v5** — Casper 2.x contract SDK
+- **casper-types v6** — Casper 2.x type system
+- **wee_alloc** — no_std global allocator for wasm32-unknown-unknown
+
+All contracts use `#![no_std]` (no standard library) as required by the Casper VM.
 
 ## Build all four contracts
 
@@ -14,30 +14,45 @@ plain `cargo build --target wasm32-unknown-unknown` instead.
 # 1. add the wasm target (once)
 rustup target add wasm32-unknown-unknown
 
-# 2. compile each contract via its feature flag
-cd contracts
+# 2. build all 4 contracts via feature flags
+bash scripts/build_contracts.sh
 
-mkdir -p wasm
-
-cargo build --release --target wasm32-unknown-unknown --features oracle-registry \
-  && cp target/wasm32-unknown-unknown/release/helios_contracts.wasm wasm/OracleRegistry.wasm
-
-cargo build --release --target wasm32-unknown-unknown --features data-market \
-  && cp target/wasm32-unknown-unknown/release/helios_contracts.wasm wasm/DataMarket.wasm
-
-cargo build --release --target wasm32-unknown-unknown --features fund-vault \
-  && cp target/wasm32-unknown-unknown/release/helios_contracts.wasm wasm/FundVault.wasm
-
-cargo build --release --target wasm32-unknown-unknown --features governance \
-  && cp target/wasm32-unknown-unknown/release/helios_contracts.wasm wasm/Governance.wasm
-
-# 3. verify every wasm exports `call` (not `main`)
-python3 ../scripts/check_wasm_exports.py wasm/*.wasm
+# Output:
+#   contracts/wasm/OracleRegistry.wasm (65KB)
+#   contracts/wasm/DataMarket.wasm     (69KB)
+#   contracts/wasm/FundVault.wasm      (60KB)
+#   contracts/wasm/Governance.wasm     (61KB)
 ```
 
-## Run the 13 unit tests (host, no wasm target needed)
+The build script uses `RUSTFLAGS="-C link-arg=--allow-undefined"` to allow
+references to Casper VM host functions (casper_get_named_arg, casper_revert, etc.)
+that are resolved at runtime by the VM.
+
+### Manual build (single contract)
 
 ```bash
+cd contracts
+
+RUSTFLAGS="-C link-arg=--allow-undefined" cargo build --release \
+  --target wasm32-unknown-unknown \
+  --features oracle-registry \
+  --no-default-features
+
+cp target/wasm32-unknown-unknown/release/helios_contracts.wasm wasm/OracleRegistry.wasm
+```
+
+### Verify WASM exports
+
+```bash
+python3 scripts/check_wasm_exports.py wasm/*.wasm
+```
+
+Every WASM must export `call` (the Casper ABI entry point).
+
+## Run unit tests (host build, no wasm target needed)
+
+```bash
+cd contracts
 cargo test
 ```
 
@@ -45,5 +60,13 @@ cargo test
 
 One crate, four feature-gated `#[no_mangle] pub extern "C" fn call()`.
 Each build produces one wasm that is fully self-contained and exports exactly
-one entry-point named `call` — the Casper ABI requirement. No odra-build,
-no odra-schema, no [[bin]] targets, no zsh glob bombs.
+one entry-point named `call` — the Casper ABI requirement.
+
+## Troubleshooting
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `undefined symbol: casper_*` | Missing `--allow-undefined` | Use `RUSTFLAGS="-C link-arg=--allow-undefined"` |
+| `can't find crate for 'std'` | Missing `#![no_std]` | Already added in lib.rs |
+| `Memory section should exist` | RUSTFLAGS has `--import-memory` | `unset RUSTFLAGS` before building |
+| `version conflict casper-contract` | Stale cache | `rm -rf contracts/target/` then rebuild |

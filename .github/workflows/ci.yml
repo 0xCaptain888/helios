@@ -11,11 +11,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
-      - name: Install cargo-odra
-        run: cargo install cargo-odra --locked
-      - name: Unit tests (OdraVM)
+      - name: Unit tests (host build)
         working-directory: contracts
-        run: cargo odra test
+        run: cargo test
+      - name: Build WASM (all 4 contracts)
+        run: bash scripts/build_contracts.sh
+      - name: Verify WASM exports
+        run: python3 scripts/check_wasm_exports.py contracts/wasm/*.wasm
       - name: Format check
         working-directory: contracts
         run: cargo fmt --check
@@ -27,7 +29,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install dependencies
+        run: pip install cryptography
       - name: Byte-compile all agent code
-        run: python -m compileall demo.py agents
+        run: python -m compileall demo.py agents scripts/casper_deploy.py scripts/deploy_helios.py
       - name: Smoke-run the machine economy (3 rounds)
         run: python demo.py --rounds 3 --fast --no-serve

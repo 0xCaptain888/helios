@@ -10,15 +10,17 @@ Steps:
   5. Wire them: call set_market on OracleRegistry
   6. Deploy FundVault
   7. Deploy Governance
-  8. Write agents/testnet.env
-  9. Produce first on-chain activity (register + attest + anchor)
-  10. Print explorer links for all transactions
+  8. Wire FundVault → Governance
+  9. Write agents/testnet.env
+  10. Produce first on-chain activity (register + attest + anchor)
+  11. Print explorer links for all transactions
 
 Usage:
   python3 scripts/deploy_helios.py
   python3 scripts/deploy_helios.py --keys-dir keys --node https://rpc.testnet.cspr.cloud
   python3 scripts/deploy_helios.py --skip-keygen   # if keys already exist
 """
+
 from __future__ import annotations
 import argparse, json, os, sys, time
 from pathlib import Path
@@ -26,32 +28,35 @@ from pathlib import Path
 # Add project root so we can import casper_deploy
 sys.path.insert(0, str(Path(__file__).parent))
 from casper_deploy import (
-    load_key, generate_key, pubkey_to_account_hash, pubkey_hex_with_algo,
-    install_wasm, call_entry_point, wait_for_deploy,
-    arg_string, arg_u64, arg_u32, arg_u512,
-    _rpc, NODES, EXPLORER,
+    CasperKey,
+    generate_key,
+    install_wasm,
+    call_entry_point,
+    wait_for_deploy,
+    arg_string,
+    arg_u64,
+    arg_u32,
+    arg_u512,
+    _rpc,
+    NODES,
+    EXPLORER,
 )
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
-ROOT   = Path(__file__).parent.parent
-WASM   = ROOT / "contracts" / "wasm"
+ROOT = Path(__file__).parent.parent
+WASM = ROOT / "contracts" / "wasm"
 AGENTS = ROOT / "agents"
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def pubkey_bytes(key) -> bytes:
-    return key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-
-def account_hash(key) -> str:
-    return pubkey_to_account_hash(pubkey_bytes(key))
 
 def wait_and_get_contract_hash(deploy_hash: str, contract_name: str, node: str) -> str:
     """Wait for deploy, then extract contract hash from execution result."""
     wait_for_deploy(deploy_hash, node=node)
     time.sleep(2)  # allow state to propagate
     try:
-        result = _rpc("info_get_transaction",
-                      {"transaction_hash": {"Deploy": deploy_hash}}, node)
+        result = _rpc(
+            "info_get_transaction", {"transaction_hash": {"Deploy": deploy_hash}}, node
+        )
         txn = result.get("transaction", result.get("deploy", {}))
         # execution_info path (Casper 2.x)
         exec_info = txn.get("execution_info", {})
@@ -63,29 +68,40 @@ def wait_and_get_contract_hash(deploy_hash: str, contract_name: str, node: str) 
         # fallback: user reads from cspr.live
         print(f"  ⚠ Could not auto-extract {contract_name} hash.")
         print(f"    Open {EXPLORER}/deploy/{deploy_hash}")
-        print(f"    Find the 'WriteContract' entry → copy the hash (without 'hash-' prefix)")
-        return input(f"  Paste {contract_name} hash: ").strip().replace("hash-","")
+        print(
+            f"    Find the 'WriteContract' entry → copy the hash (without 'hash-' prefix)"
+        )
+        return input(f"  Paste {contract_name} hash: ").strip().replace("hash-", "")
     except Exception as e:
         print(f"  ⚠ Hash extraction error ({e}), please paste manually:")
         print(f"    Explorer: {EXPLORER}/deploy/{deploy_hash}")
-        return input(f"  Paste {contract_name} hash: ").strip().replace("hash-","")
+        return input(f"  Paste {contract_name} hash: ").strip().replace("hash-", "")
+
 
 # ── main deployment flow ──────────────────────────────────────────────────────
 
+
 def main():
     parser = argparse.ArgumentParser(description="Deploy Helios to Casper Testnet")
-    parser.add_argument("--keys-dir",    default="keys")
-    parser.add_argument("--node",        default=NODES[0])
+    parser.add_argument("--keys-dir", default="keys")
+    parser.add_argument("--node", default=NODES[0])
     parser.add_argument("--skip-keygen", action="store_true")
-    parser.add_argument("--skip-activity", action="store_true",
-                        help="Skip the post-deploy on-chain activity step")
-    parser.add_argument("--resume",      type=str, default=None,
-                        metavar="testnet.env",
-                        help="Resume from an existing testnet.env (skip deploys)")
+    parser.add_argument(
+        "--skip-activity",
+        action="store_true",
+        help="Skip the post-deploy on-chain activity step",
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        metavar="testnet.env",
+        help="Resume from an existing testnet.env (skip deploys)",
+    )
     args = parser.parse_args()
 
     keys_dir = ROOT / args.keys_dir
-    node     = args.node
+    node = args.node
 
     print("═" * 60)
     print("  Helios Testnet Deployment  (pure Python)")
@@ -95,7 +111,7 @@ def main():
     print("\n[0] Checking node connectivity…")
     try:
         status = _rpc("info_get_status", {}, node)
-        print(f"    ✓ {node} — chain: {status.get('chainspec_name','?')}")
+        print(f"    ✓ {node} — chain: {status.get('chainspec_name', '?')}")
     except Exception as e:
         print(f"    ✗ Cannot reach {node}: {e}")
         for alt in NODES[1:]:
@@ -111,7 +127,13 @@ def main():
             sys.exit(1)
 
     # ── Step 1: keygen ────────────────────────────────────────────────────────
-    roles = ["oracle_tbill", "oracle_gold", "oracle_reindex", "fund_agent", "risk_agent"]
+    roles = [
+        "oracle_tbill",
+        "oracle_gold",
+        "oracle_reindex",
+        "fund_agent",
+        "risk_agent",
+    ]
     if args.resume:
         print(f"\n[1] Resuming — loading keys from {keys_dir}")
     elif not args.skip_keygen:
@@ -125,12 +147,11 @@ def main():
                 continue
             rdir.mkdir(parents=True, exist_ok=True)
             k = generate_key(str(key_path))
-            pub = pubkey_bytes(k)
-            print(f"    {role}: account-hash-{pubkey_to_account_hash(pub)}")
+            print(f"    {role}: {k.account_hash()}")
     else:
         print(f"\n[1] Skipping keygen (--skip-keygen)")
 
-    keys = {r: load_key(str(keys_dir / r / "secret_key.pem")) for r in roles}
+    keys = {r: CasperKey(str(keys_dir / r / "secret_key.pem")) for r in roles}
     deployer_key = keys["fund_agent"]
 
     # ── Faucet prompt ─────────────────────────────────────────────────────────
@@ -139,15 +160,18 @@ def main():
         print("    URL: https://testnet.cspr.live/tools/faucet")
         print("    Each account needs ≥ 1000 test CSPR. Accounts:\n")
         for role, key in keys.items():
-            pub = pubkey_bytes(key)
-            hex_addr = (keys_dir / role / "public_key_hex").read_text().strip()
-            print(f"    {role:20s}  {hex_addr}")
+            print(f"    {role:20s}  {key.pubkey_hex()}")
         print()
         input("    Press ENTER when all accounts are funded… ")
 
     # ── Wasm check ────────────────────────────────────────────────────────────
     if not args.resume:
-        needed = ["OracleRegistry.wasm", "DataMarket.wasm", "FundVault.wasm", "Governance.wasm"]
+        needed = [
+            "OracleRegistry.wasm",
+            "DataMarket.wasm",
+            "FundVault.wasm",
+            "Governance.wasm",
+        ]
         missing_wasm = [w for w in needed if not (WASM / w).exists()]
         if missing_wasm:
             print(f"\n✗ Missing wasm files: {missing_wasm}")
@@ -157,6 +181,7 @@ def main():
         # Verify exports
         sys.path.insert(0, str(ROOT / "scripts"))
         import check_wasm_exports
+
         bad = 0
         for w in needed:
             exports = check_wasm_exports.wasm_exports(str(WASM / w))
@@ -178,9 +203,9 @@ def main():
                 k, v = line.split("=", 1)
                 env[k.strip()] = v.strip()
         registry_hash = env.get("REGISTRY_HASH", "")
-        market_hash   = env.get("MARKET_HASH", "")
-        vault_hash    = env.get("VAULT_HASH", "")
-        gov_hash      = env.get("GOV_HASH", "")
+        market_hash = env.get("MARKET_HASH", "")
+        vault_hash = env.get("VAULT_HASH", "")
+        gov_hash = env.get("GOV_HASH", "")
         print(f"\n[3-7] Resuming from existing env:")
         print(f"    REGISTRY: {registry_hash}")
         print(f"    MARKET:   {market_hash}")
@@ -197,48 +222,76 @@ def main():
         print(f"    OracleRegistry hash: {registry_hash}")
 
         print("\n[5] Deploying DataMarket…")
-        h = install_wasm(deployer_key, str(WASM / "DataMarket.wasm"),
-                         named_args=[
-                             arg_string("registry_hash", registry_hash),
-                             arg_u32("fee_bps", 250),
-                         ], node=node)
+        h = install_wasm(
+            deployer_key,
+            str(WASM / "DataMarket.wasm"),
+            named_args=[
+                arg_string("registry_hash", registry_hash),
+                arg_u32("fee_bps", 250),
+            ],
+            node=node,
+        )
         print(f"    deploy: {h}\n    explorer: {EXPLORER}/deploy/{h}")
         txns["market_deploy"] = h
         market_hash = wait_and_get_contract_hash(h, "DataMarket", node)
         print(f"    DataMarket hash: {market_hash}")
 
         print("\n[5b] Wiring: OracleRegistry.set_market…")
-        h = call_entry_point(deployer_key, registry_hash, "set_market",
-                             [arg_string("market", market_hash)], node=node)
+        h = call_entry_point(
+            deployer_key,
+            registry_hash,
+            "set_market",
+            [arg_string("market", market_hash)],
+            node=node,
+        )
         wait_for_deploy(h, node=node)
         txns["set_market"] = h
         print(f"    wired ✓  deploy: {h}")
 
         print("\n[6] Deploying FundVault…")
-        fund_acct = f"account-hash-{account_hash(keys['fund_agent'])}"
-        h = install_wasm(deployer_key, str(WASM / "FundVault.wasm"),
-                         named_args=[
-                             arg_string("operator", fund_acct),
-                             arg_string("governance_hash", "pending"),  # updated after step 7
-                         ], node=node)
+        fund_acct = deployer_key.account_hash()
+        h = install_wasm(
+            deployer_key,
+            str(WASM / "FundVault.wasm"),
+            named_args=[
+                arg_string("operator", fund_acct),
+                arg_string("governance_hash", "pending"),  # updated after step 7
+            ],
+            node=node,
+        )
         print(f"    deploy: {h}\n    explorer: {EXPLORER}/deploy/{h}")
         txns["vault_deploy"] = h
         vault_hash = wait_and_get_contract_hash(h, "FundVault", node)
         print(f"    FundVault hash: {vault_hash}")
 
         print("\n[7] Deploying Governance…")
-        fund_acct  = f"account-hash-{account_hash(keys['fund_agent'])}"
-        risk_acct  = f"account-hash-{account_hash(keys['risk_agent'])}"
-        h = install_wasm(deployer_key, str(WASM / "Governance.wasm"),
-                         named_args=[
-                             arg_string("proposer",      fund_acct),
-                             arg_string("risk_agent",    risk_acct),
-                             arg_u64("veto_window_ms",  90_000),
-                         ], node=node)
+        risk_acct = keys["risk_agent"].account_hash()
+        h = install_wasm(
+            deployer_key,
+            str(WASM / "Governance.wasm"),
+            named_args=[
+                arg_string("proposer", fund_acct),
+                arg_string("risk_agent", risk_acct),
+                arg_u64("veto_window_ms", 90_000),
+            ],
+            node=node,
+        )
         print(f"    deploy: {h}\n    explorer: {EXPLORER}/deploy/{h}")
         txns["gov_deploy"] = h
         gov_hash = wait_and_get_contract_hash(h, "Governance", node)
         print(f"    Governance hash: {gov_hash}")
+
+        print("\n[7b] Wiring: FundVault.set_governance…")
+        h = call_entry_point(
+            deployer_key,
+            vault_hash,
+            "set_governance",
+            [arg_string("governance_hash", gov_hash)],
+            node=node,
+        )
+        wait_for_deploy(h, node=node)
+        txns["set_governance"] = h
+        print(f"    wired ✓  deploy: {h}")
 
         # save all deploy hashes for reference
         Path("deploy_hashes.json").write_text(json.dumps(txns, indent=2))
@@ -266,28 +319,40 @@ GOV_HASH={gov_hash}
         activity_txns = []
 
         for role, feed_key, title, price in [
-            ("oracle_tbill",   "us_tbill_3m",     "US T-Bill 3M Yield",   2_000_000_000),
-            ("oracle_gold",    "gold_spot_usd",   "Gold Spot Price (USD)", 3_000_000_000),
-            ("oracle_reindex", "cn_reindex_chz",  "Zhongshan RE Index",   5_000_000_000),
+            ("oracle_tbill", "us_tbill_3m", "US T-Bill 3M Yield", 2_000_000_000),
+            ("oracle_gold", "gold_spot_usd", "Gold Spot Price (USD)", 3_000_000_000),
+            ("oracle_reindex", "cn_reindex_chz", "Zhongshan RE Index", 5_000_000_000),
         ]:
             k = keys[role]
-            acct = f"account-hash-{account_hash(k)}"
+            acct = k.account_hash()
             print(f"\n  Registering {role}…")
-            h = call_entry_point(k, registry_hash, "register", [
-                arg_string("name",        title),
-                arg_string("category",    "rwa"),
-                arg_string("endpoint",    f"https://helios.example/{feed_key}"),
-                arg_u64("price_motes",    price),
-            ], node=node)
+            h = call_entry_point(
+                k,
+                registry_hash,
+                "register",
+                [
+                    arg_string("name", title),
+                    arg_string("category", "rwa"),
+                    arg_string("endpoint", f"https://helios.example/{feed_key}"),
+                    arg_u64("price_motes", price),
+                ],
+                node=node,
+            )
             wait_for_deploy(h, node=node)
             activity_txns.append({"action": f"register:{role}", "hash": h})
             print(f"    register: {EXPLORER}/deploy/{h}")
 
             print(f"  Posting attestation for {feed_key}…")
-            h = call_entry_point(k, registry_hash, "post_attestation", [
-                arg_string("feed_key", feed_key),
-                arg_string("value",   "42.0"),
-            ], node=node)
+            h = call_entry_point(
+                k,
+                registry_hash,
+                "post_attestation",
+                [
+                    arg_string("feed_key", feed_key),
+                    arg_string("value", "42.0"),
+                ],
+                node=node,
+            )
             wait_for_deploy(h, node=node)
             activity_txns.append({"action": f"attest:{feed_key}", "hash": h})
             print(f"    attest: {EXPLORER}/deploy/{h}")
@@ -308,6 +373,7 @@ GOV_HASH={gov_hash}
     print("    export HELIOS_MODE=testnet")
     print("    python3 scripts/testnet_round.py --rounds 3")
     print()
+
 
 if __name__ == "__main__":
     main()
